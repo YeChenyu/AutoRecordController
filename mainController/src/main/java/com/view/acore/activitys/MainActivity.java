@@ -1,12 +1,8 @@
-package Android.view.core;
+package com.view.acore.activitys;
 
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.Log;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -17,35 +13,20 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 
-import static org.junit.Assert.*;
+import Android.view.acore.R;
 
-/**
- * Instrumented test, which will execute on an Android device.
- *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
- */
-@RunWith(AndroidJUnit4.class)
-public class ExampleInstrumentedTest {
+public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = ExampleInstrumentedTest.class.getSimpleName();
+    private static final String TAG = MainActivity.class.getSimpleName();
 
 
-    @Test
-    public void useAppContext() {
-        // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getTargetContext();
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main_activity);
 
-        assertEquals("Android.view.core.test", appContext.getPackageName());
-
-
-    }
-
-    @Test
-    public void clientTest(){
-        System.out.println("executed client test");
         mThread = new ClientThread();
         mThread.start();
-
     }
 
     private ClientThread mThread ;
@@ -64,7 +45,7 @@ public class ExampleInstrumentedTest {
             if(socket == null) {
                 try {
                     Log.d(TAG, "run: start to connect server...");
-                    socket = new Socket("10.131.252.138", 3303);
+                    socket = new Socket("192.168.0.11",  30001);
                     socket.setSoTimeout(10*1000);
                     Log.d(TAG, "run: server path="+ socket.getRemoteSocketAddress().toString());
                     is = socket.getInputStream();
@@ -84,5 +65,13 @@ public class ExampleInstrumentedTest {
                 }
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(mThread != null)
+            mThread.interrupt();
+        mThread = null;
     }
 }
