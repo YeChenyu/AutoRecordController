@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.view.core.aidl.OnScreenRecordListener;
 import com.view.core.aidl.ScreenRecord;
@@ -76,21 +77,25 @@ public class ScreenRecordBinder extends ScreenRecord.Stub implements Handler.Cal
         }else{
             mRecordFilePath = getSaveDirectory()  + File.separator+  System.currentTimeMillis() + ".mp4";
         }
+        Log.d(TAG, "initRecordService: path="+ mRecordFilePath);
         if(param.containsKey("KEY_DISPLAY_WIDTH")){
             mRecordWidth = param.getInt("KEY_DISPLAY_WIDTH");
         }else{
             mRecordWidth = 256;
         }
+        Log.d(TAG, "initRecordService: width="+ mRecordWidth);
         if(param.containsKey("KEY_DISPLAY_HEIGHT")){
             mRecordHeight = param.getInt("KEY_DISPLAY_HEIGHY");
         }else{
             mRecordHeight = 768;
         }
+        Log.d(TAG, "initRecordService: height="+ mRecordHeight);
         if(param.containsKey("KEY_DISPLAY_DPI")){
             mScreenDpi = param.getInt("KEY_DISPLAY_DPI");
         }else{
             mScreenDpi = 256;
         }
+        Log.d(TAG, "initRecordService: dpi="+ mScreenDpi);
 
         if(param.containsKey("KEY_RECORD_RESULT_CODE")) {
             mResultCode = param.getInt("KEY_RECORD_RESULT_CODE");

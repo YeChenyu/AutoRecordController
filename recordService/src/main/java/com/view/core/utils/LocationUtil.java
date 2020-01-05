@@ -45,15 +45,15 @@ public class LocationUtil {
             return false;
         }
 
-        List<String> list = mLocationManager.getProviders(true);
+        List<String> list = mLocationManager.getAllProviders();
         if (list == null || list.size() < 1) {
             Log.e(TAG, "initLocationManager: there is no enable provider");
             return false;
         }
-        if (list.contains(LocationManager.GPS_PROVIDER)) {
-            provider = LocationManager.GPS_PROVIDER;
-        } else if (list.contains(LocationManager.NETWORK_PROVIDER)) {
+        if (list.contains(LocationManager.NETWORK_PROVIDER)) {
             provider = LocationManager.NETWORK_PROVIDER;
+        }else if (list.contains(LocationManager.GPS_PROVIDER)) {
+            provider = LocationManager.GPS_PROVIDER;
         } else {
             provider = null;
             Log.e(TAG, "initLocationManager: please check GPS or Network is turn on");
@@ -81,6 +81,7 @@ public class LocationUtil {
     private LocationListener mListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
+            Log.d(TAG, "onLocationChanged: location="+ location);
             mLocation = location;
         }
 
@@ -99,6 +100,41 @@ public class LocationUtil {
 
         }
     };
+
+    private Location getLastKnownLocation() {
+        if (ActivityCompat.checkSelfPermission(mContext,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(mContext,
+                        Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return null;
+        }
+        LocationManager locationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
+        List<String> providers = locationManager.getAllProviders();
+        Location bestLocation = null;
+        for (String provider : providers) {
+            Location l = locationManager.getLastKnownLocation(provider);
+            if (l == null) {
+                continue;
+            }
+            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                // Found best last known location: %s", l);
+                bestLocation = l;
+            }
+        }
+        return bestLocation;
+    }
+
+    public double[] getLastLocationInfo(){
+        Location location = getLastKnownLocation();
+        if(location == null){
+            Log.e(TAG, "getLocationInfo: can't get location info");
+            return null;
+        }
+        double[] result = new double[2];
+        result[0] = location.getLongitude();
+        result[1] = location.getLatitude();
+        return result;
+    }
 
     public double[] getLocationInfo() {
         if (mLocationManager == null || provider == null) {

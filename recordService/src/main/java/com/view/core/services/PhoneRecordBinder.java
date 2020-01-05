@@ -120,11 +120,16 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
                 if (enough){
                     //空间不足，停止录屏
                     try {
+                        if(mediaRecorder != null){
+                            mediaRecorder.stop();
+                            mediaRecorder.release();
+                            mediaRecorder = null;
+                            mRecordSeconds = 0;
+                        }
                         mListener.onRecordError(-2, "存储空间不足！");
                     } catch (RemoteException e) {
                         e.printStackTrace();
                     }
-                    mRecordSeconds = 0;
                     break;
                 }
 
@@ -135,15 +140,16 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
                     e.printStackTrace();
                 }
 
-                if (mRecordSeconds < 30 ){
+                if (mRecordSeconds < 10 ){
                     mHandler.sendEmptyMessageDelayed(MSG_TYPE_COUNT_DOWN,1000);
-                } else if (mRecordSeconds ==  30 ){
+                } else if (mRecordSeconds ==  10 ){
                     try {
                         if(mediaRecorder != null) {
                             mediaRecorder.stop();
                             mediaRecorder.release();
                             mediaRecorder = null;
                             mRecordSeconds = 0;
+                            mContext.unregisterReceiver(myPhoneStateReceiver);
                             mListener.onRecordSuccess(file.getAbsolutePath());
                         }
                     } catch (RemoteException e) {
@@ -185,6 +191,7 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
                             mediaRecorder.stop();
                             mediaRecorder.release();
                             mediaRecorder = null;
+                            mContext.unregisterReceiver(myPhoneStateReceiver);
                             mListener.onRecordSuccess(file.getAbsolutePath());
                         }
                         break;

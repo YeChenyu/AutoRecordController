@@ -103,8 +103,7 @@ public class ExampleUnitTest {
         @Override
         public void run() {
             try {
-                mServer = new ServerSocket();
-                mServer.bind(new InetSocketAddress("192.168.0.11", 30001));
+                mServer = new ServerSocket(30001);
                 System.out.println("run: start to wait client connect...");
                 socket = mServer.accept();
                 if(socket == null){

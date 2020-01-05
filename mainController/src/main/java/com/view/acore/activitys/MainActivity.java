@@ -1,8 +1,15 @@
 package com.view.acore.activitys;
 
+import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
+
+import com.view.acore.thread.OnServerListener;
+import com.view.acore.thread.ServerThread;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -15,57 +22,32 @@ import java.net.Socket;
 
 import Android.view.acore.R;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements Handler.Callback {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
+    private Context mContext = this;
+    private ServerThread mThread = null;
+
+    private Handler mHandler = new Handler(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
 
-        mThread = new ClientThread();
+        mThread = new ServerThread(mContext, new OnServerListener() {
+            @Override
+            public void onCommand(String cmd, String data) {
+                Message msg = mHandler.obtainMessage();
+                msg.obj = data;
+                mHandler.sendMessage(msg);
+            }
+        });
         mThread.start();
     }
 
-    private ClientThread mThread ;
-    public class ClientThread extends Thread{
 
-        private Socket socket;
-        private InputStream is;
-        private OutputStream os;
-
-        public ClientThread(){
-
-        }
-
-        @Override
-        public void run() {
-            if(socket == null) {
-                try {
-                    Log.d(TAG, "run: start to connect server...");
-                    socket = new Socket("192.168.0.11",  30001);
-                    socket.setSoTimeout(10*1000);
-                    Log.d(TAG, "run: server path="+ socket.getRemoteSocketAddress().toString());
-                    is = socket.getInputStream();
-                    os = socket.getOutputStream();
-                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
-                    Log.d(TAG, "run: hello to server...");
-                    bw.write("hello server, this is client!");
-                    bw.flush();
-                    String data = null;
-                    Log.d(TAG, "run: start to read data...");
-                    while ((data=br.readLine()) != null){
-                        Log.d(TAG, "run: receive data="+ data);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
 
     @Override
     protected void onDestroy() {
@@ -73,5 +55,11 @@ public class MainActivity extends AppCompatActivity {
         if(mThread != null)
             mThread.interrupt();
         mThread = null;
+    }
+
+    @Override
+    public boolean handleMessage(Message msg) {
+        Toast.makeText(mContext, (String)msg.obj, Toast.LENGTH_SHORT).show();
+        return false;
     }
 }

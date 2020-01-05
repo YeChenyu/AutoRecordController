@@ -1,11 +1,13 @@
 package com.view.core;
 
 import android.app.Application;
-import android.content.ComponentName;
-import android.content.pm.PackageManager;
+import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 import com.view.core.activitys.MainActivity;
+import com.view.core.thread.ClientThread;
+import com.view.core.thread.OnClientListener;
 import com.view.core.utils.LocationUtil;
 
 import java.io.IOException;
@@ -25,18 +27,61 @@ public class MyApplication extends Application {
 
     private static final String TAG = MyApplication.class.getSimpleName();
 
+    public static String SERVER_IP = "192.168.11.3";
+    public static final int SERVER_PORT = 4401;
+    public static final int SERVER_CONNECT_TIMEOUT = 10*1000;
+
+    private Context mContext ;
+    private ClientThread mClientThread = null;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        mContext = this;
 //        PackageManager pm = getPackageManager();
 //        ComponentName component = new ComponentName(getApplicationContext(), MainActivity.class);
 //        pm.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
 //                PackageManager.DONT_KILL_APP);
 
         LocationUtil.getInstance().initLocationManager(this);
+
+//        if(mClientThread == null) {
+//            mClientThread = new ClientThread(this, new OnClientListener() {
+//                @Override
+//                public void onCommand(String cmd, int length, byte[] data) {
+//                    if (cmd.equals("123")) {
+//                        Intent intent = new Intent();
+//                        intent.setClass(mContext, MainActivity.class);
+//                        intent.setPackage(getPackageName());
+//                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//                        startActivity(intent);
+//                    }
+//                }
+//            });
+//            mClientThread.start();
+//        }
     }
 
-    private SocketThread mThread ;
+    public ClientThread getRemoteClient(){
+        if(mClientThread == null){
+            mClientThread = new ClientThread(this, new OnClientListener() {
+                @Override
+                public void onCommand(String cmd, int length, byte[] data) {
+                    if(cmd.equals("123")){
+                        Intent intent = new Intent();
+                        intent.setClass(mContext, MainActivity.class);
+                        intent.setPackage(getPackageName());
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                    }
+                }
+            });
+            mClientThread.start();
+        }
+        return mClientThread;
+    }
+
+    private SocketThread mServerThread ;
     public class SocketThread extends Thread{
 
         private ServerSocket mServer = null;
