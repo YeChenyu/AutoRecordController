@@ -1,4 +1,4 @@
-package com.view.core.thread;
+package com.view.acore.thread;
 
 /**
  * @author: yechenyu

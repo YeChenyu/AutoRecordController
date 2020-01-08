@@ -1,11 +1,9 @@
-package com.view.core.thread;
+package com.view.acore.thread;
 
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
-
-import com.view.core.MyApplication;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -14,10 +12,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.SocketException;
 
 /**
  * @author: yechenyu
@@ -50,9 +48,9 @@ public class ClientThread extends Thread {
         if(socket == null) {
             while (true) {
                 mListener.onStartConnect();
+                Log.d(TAG,"run: start to connect server...");
+                socket = new Socket();
                 try {
-                    Log.d(TAG, "run: start to connect server...");
-                    socket = new Socket();
                     socket.setSoTimeout(Constant.SERVER_CONNECT_TIMEOUT);
                     socket.connect(new InetSocketAddress(Constant.SERVER_IP, Constant.SERVER_PORT),
                             Constant.SERVER_CONNECT_TIMEOUT);
@@ -63,7 +61,7 @@ public class ClientThread extends Thread {
                         mListener.onConnectionFailed("connection status error");
                         continue;
                     }
-                }catch (IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                     mListener.onConnectionFailed(e.getMessage());
                     try {
@@ -77,42 +75,36 @@ public class ClientThread extends Thread {
                 if (address != null) {
                     Log.d(TAG, "run: server path=" + address.toString() +
                             ", status=" + socket.isConnected());
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(mContext, "Server: " + address.toString(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
                 }
-                try{
+                try {
                     mListener.onConnected(address.toString(), socket.getPort());
                     is = socket.getInputStream();
                     os = socket.getOutputStream();
                     BufferedReader br = new BufferedReader(new InputStreamReader(is));
                     BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
-                    Log.d(TAG,"run: hello to server...");
-                    bw.write(AUTH_STRING+ "\n");
+                    Log.d(TAG, "run: hello to server...");
+                    bw.write(AUTH_STRING + "\r\n");
                     bw.flush();
-                    Log.d(TAG,"run: start to read auth...");
+                    Log.d(TAG, "run: start to read auth...");
                     String auth = br.readLine();
-                    Log.d(TAG, "run: auth="+ auth);
-                    if(auth == null || auth.equals(AUTH_STRING)){
+                    Log.d(TAG, "run: auth=" + auth);
+                    if (auth == null || auth.equals(AUTH_STRING)) {
                         Log.d(TAG, "run: auth failed!");
                         mListener.onAuthenticateFailed();
-                        if(is != null)is.close();
-                        if(os != null)os.close();
+                        if (is != null) is.close();
+                        if (os != null) os.close();
                         socket.close();
                         socket = null;
-                        continue;
+                        break;
                     }
                     mListener.onAuthenticateSuccess();
                     String data = null;
                     Log.d(TAG, "run: start to read data...");
                     while ((data = br.readLine()) != null) {
-                        Log.d(TAG,"run: receive data=" + data);
+                        Log.d(TAG, "run: receive data=" + data);
                         parseCommand(data);
                     }
-                } catch (IOException e) {
+                }catch (IOException e) {
                     e.printStackTrace();
                     mListener.onError(-1, e.getMessage());
                 }finally {

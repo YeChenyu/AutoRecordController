@@ -31,9 +31,9 @@ public class SplashActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splash_activity);
-
-        ((TextView)findViewById(R.id.content)).setText(getlocalip());
-        ((MyApplication)getApplication()).SERVER_IP = ((EditText)findViewById(R.id.server_ip)).getText().toString();
+//
+//        ((TextView)findViewById(R.id.content)).setText(getlocalip());
+//        ((MyApplication)getApplication()).SERVER_IP = ((EditText)findViewById(R.id.server_ip)).getText().toString();
 
     }
 
@@ -48,7 +48,7 @@ public class SplashActivity extends Activity {
     }
 
     public void startClient(View v){
-        ((MyApplication)getApplication()).SERVER_IP = ((EditText)findViewById(R.id.server_ip)).getText().toString();
-        ((MyApplication)getApplication()).getRemoteClient();
+//        ((MyApplication)getApplication()).SERVER_IP = ((EditText)findViewById(R.id.server_ip)).getText().toString();
+//        ((MyApplication)getApplication()).getRemoteClient();
     }
 }
