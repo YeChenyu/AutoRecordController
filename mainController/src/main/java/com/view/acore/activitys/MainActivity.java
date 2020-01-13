@@ -9,6 +9,7 @@ import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,6 +19,7 @@ import com.view.acore.thread.OnClientListener;
 import com.view.acore.thread.OnServerListener;
 import com.view.acore.thread.ServerThread;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -39,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     private Handler mHandler = new Handler(this);
 
     private TextView mContent;
+    private EditText mIp, mPort;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +62,9 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
             IP = getLocalIpAddress();
         mContent = ((TextView)findViewById(R.id.content));
         mContent.setText("本机地址："+ IP+ "\r\n");
+
+        mIp = findViewById(R.id.address_ip);
+        mPort = findViewById(R.id.address_port);
 
     }
 
@@ -126,10 +132,10 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
             }
 
             @Override
-            public void onCommand(String cmd, int length, byte[] data) {
+            public void onCommand(String cmd, String json) {
                 Message msg = mHandler.obtainMessage(CMD_COMMAND);
-                msg.arg1 = length;
-                msg.obj = data;
+                msg.arg1 = (cmd.equals(Constant.KEY_LIST) ? 1 : 2);
+                msg.obj = json;
                 mHandler.sendMessage(msg);
             }
 
@@ -170,6 +176,29 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                 mContent.append("认证成功！！！！！！！！！\r\n");
                 break;
             case CMD_COMMAND:
+                String json = (String)msg.obj;
+                if(msg.arg1 == 1){
+                    try {
+                        JSONArray jsonArray = new JSONArray(json);
+                        boolean hasRemote = false;
+                        if(jsonArray.length() > 0){
+                            for(int i=0; i<jsonArray.length(); i++) {
+                                String host = (String) jsonArray.get(i);
+                                Log.d(TAG, "handleMessage: remote host="+ host+ ", local host="+ mClientThread.getHostName());
+                                if(host.contains(mClientThread.getHostName()))
+                                    continue;
+                                hasRemote = true;
+                                mContent.append("Device"+ (i+1)+ ": "+ host+ "\r\n");
+                            }
+                        }
+                        if(!hasRemote)
+                            mContent.append("暂无设备连接！\r\n");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }else if(msg.what == 2){
+
+                }
                 Toast.makeText(mContext, (String)msg.obj, Toast.LENGTH_SHORT).show();
                 break;
             case CMD_CONNECTION_FAILED:
@@ -184,8 +213,8 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     public void onSearchRemote(View v){
         JSONObject json = new JSONObject();
         try {
-            json.put("CMD", Constant.CMD_SEARCH_REMOTE_LIST);
-            byte[] data = json.toString().getBytes();
+            json.put(Constant.KEY_CMD, Constant.CMD_SEARCH_REMOTE_LIST);
+            byte[] data = (json.toString()+ "\n").getBytes();
             if(mClientThread == null){
                 Toast.makeText(mContext, "请确认是否成功连接服务器!", Toast.LENGTH_SHORT).show();
                 return ;
@@ -199,8 +228,10 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     public void onFetchRemoteData(View v){
         JSONObject json = new JSONObject();
         try {
-            json.put("CMD", Constant.CMD_FETCH_REMOTE_DEVICE);
-            byte[] data = json.toString().getBytes();
+            json.put(Constant.KEY_CMD, Constant.CMD_FETCH_REMOTE_DEVICE);
+            String hostname = mIp.getText().toString().trim();
+            json.put(Constant.KEY_HOSTNAME, hostname);
+            byte[] data = (json.toString()+ "\n").getBytes();
             if(mClientThread == null){
                 Toast.makeText(mContext, "请确认是否成功连接服务器!", Toast.LENGTH_SHORT).show();
                 return ;

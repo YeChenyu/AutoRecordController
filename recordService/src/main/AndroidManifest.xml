@@ -24,7 +24,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:excludeFromRecents="true">
         <meta-data
             android:name="aia-compat-api-min-version"
             android:value="1" />

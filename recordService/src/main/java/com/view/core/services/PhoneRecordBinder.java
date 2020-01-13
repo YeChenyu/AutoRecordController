@@ -193,6 +193,7 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
                             mediaRecorder = null;
                             mContext.unregisterReceiver(myPhoneStateReceiver);
                             mListener.onRecordSuccess(file.getAbsolutePath());
+                            mListener.onPhoneIdel();
                         }
                         break;
                 }

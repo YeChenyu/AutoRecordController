@@ -17,4 +17,6 @@ interface OnPhoneRecordListener {
     void onRecordSuccess(String filePath);
 
     void onRecordError(int errCode, String message);
+
+    void onPhoneIdel();
 }

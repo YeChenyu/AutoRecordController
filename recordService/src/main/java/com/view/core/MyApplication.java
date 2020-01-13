@@ -3,7 +3,9 @@ package com.view.core;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.view.core.activitys.MainActivity;
@@ -11,6 +13,9 @@ import com.view.core.thread.ClientThread;
 import com.view.core.thread.Constant;
 import com.view.core.thread.OnClientListener;
 import com.view.core.utils.LocationUtil;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * @author: yechenyu
@@ -38,10 +43,10 @@ public class MyApplication extends Application {
 
         LocationUtil.getInstance().initLocationManager(this);
 
-//        if(mClientThread == null) {
-//            mClientThread = new ClientThread(this, mHandler, mListener);
-//            mClientThread.start();
-//        }
+        if(mClientThread == null) {
+            mClientThread = new ClientThread(this, mHandler, mListener);
+            mClientThread.start();
+        }
     }
 
     public ClientThread getRemoteClient(){
@@ -79,12 +84,16 @@ public class MyApplication extends Application {
         }
 
         @Override
-        public void onCommand(String cmd, int length, byte[] data) {
+        public void onCommand(String cmd, String json) {
+            Log.d(TAG, "onCommand: cmd="+ cmd+ ", json="+ json);
             if(cmd.equals(Constant.CMD_FETCH_REMOTE_DEVICE)){
                 Intent intent = new Intent();
                 intent.setClass(mContext, MainActivity.class);
                 intent.setPackage(getPackageName());
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                Bundle bundle = new Bundle();
+                bundle.putString(Constant.KEY_HOSTNAME, json);
+                intent.putExtra("data", bundle);
                 startActivity(intent);
             }
         }

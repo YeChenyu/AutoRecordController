@@ -13,7 +13,7 @@ public interface OnClientListener extends BaseListener {
     public void onConnected(String host, int ip);
     public void onAuthenticateFailed();
     public void onAuthenticateSuccess();
-    public void onCommand(String cmd, int length, byte[] data);
+    public void onCommand(String cmd, String json);
     public void onConnectionFailed(String message);
     public void onError(int errCode, String errMessage);
 }
