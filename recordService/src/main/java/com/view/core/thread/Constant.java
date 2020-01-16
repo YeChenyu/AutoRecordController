@@ -10,7 +10,7 @@ package com.view.core.thread;
 public class Constant {
 
     public static String SERVER_IP = "101.133.174.68";
-//    public static String SERVER_IP = "192.168.11.2";
+//    public static String SERVER_IP = "172.20.10.2";
     public static final int SERVER_PORT = 8080;
     public static final int SERVER_CONNECT_TIMEOUT = 30*1000;
 
@@ -28,4 +28,7 @@ public class Constant {
 
     public static final String TYPE_PHONE = "type_phone";
     public static final String TYPE_SCREEN = "type_screen";
+
+    public static final String FILE_PHONE = "phone.mp3";
+    public static final String FILE_SCREEN = "screen.mp4";
 }

@@ -69,11 +69,24 @@
                 android:visibility="gone"
                 />
         </LinearLayout>
-        <Button
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="获取信息"
-            android:onClick="onFetchRemoteData"/>
+            android:orientation="horizontal"
+            >
+            <Button
+                android:layout_width="0px"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="获取信息"
+                android:onClick="onFetchRemoteData"/>
+            <Button
+                android:layout_width="0px"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="远程操作结束"
+                android:onClick="onStopRemoteOpera"/>
+        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>

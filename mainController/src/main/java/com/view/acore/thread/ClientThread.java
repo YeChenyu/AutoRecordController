@@ -10,6 +10,9 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -96,11 +99,12 @@ public class ClientThread extends Thread {
                 if(local != null){
                     hostname = local.toString();
                 }
+                BufferedReader br = null;
                 try {
                     mListener.onConnected(address.toString(), socket.getPort());
                     is = socket.getInputStream();
                     os = socket.getOutputStream();
-                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                    br = new BufferedReader(new InputStreamReader(is));
                     BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
                     Log.d(TAG, "run: hello to server...");
                     bw.write(AUTH_STRING + "\n");
@@ -130,17 +134,39 @@ public class ClientThread extends Thread {
                         e1.printStackTrace();
                     }
                 }
-                byte[] result = new byte[256];
-                int ret = -1;
                 while (true) {
+                    while (true) {
+                        try {
+                            String result = null;
+                            if ((result = br.readLine()) != null) {
+                                if (parseCommand(new String(result))) {
+                                    break;
+                                }
+                            }
+                            Thread.sleep(100);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
                     try {
-                        if ((ret = is.read(result)) != -1) {
+                        byte[] result = new byte[1024];
+                        int ret = -1, length = 0;
+                        while ((ret = is.read(result)) != -1) {
                             byte[] data = new byte[ret];
                             System.arraycopy(result, 0, data, 0, ret);
-                            parseCommand(new String(data));
+                            length += ret;
+                            if(fileBw != null){
+                                fileBw.write(data);
+                                fileBw.flush();
+                            }
+                            if(length >= fileLength)
+                                break;
+                            Thread.sleep(100);
                         }
-                        Thread.sleep(500);
-                    }catch (IOException e){
+                    } catch (IOException e) {
                         e.printStackTrace();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -160,7 +186,10 @@ public class ClientThread extends Thread {
         }
     }
 
-    private void parseCommand(String data){
+    private boolean isFileTransfer = false;
+    private String currFileName;
+    private long fileLength = 0;
+    private boolean parseCommand(String data){
         Log.d(TAG, "parseCommand: data="+ data);
         if(data != null){
             try {
@@ -169,26 +198,53 @@ public class ClientThread extends Thread {
                     String ips = json.getString(Constant.KEY_LIST);
                     Log.d(TAG, "parseCommand: cmd="+ ips);
                     mListener.onCommand(Constant.KEY_LIST, ips);
+                    return false;
                 }else if(json.has(Constant.KEY_CMD)){
                     String cmd = json.getString(Constant.KEY_CMD);
                     if(cmd.equals(Constant.CMD_RETURN_REMOTE_DEVICE)){
-                        String fileName = json.getString(Constant.KEY_FILE);
-                        long length = json.getLong(Constant.KEY_LENGTH);
+                        currFileName = json.getString(Constant.KEY_FILE);
+                        fileLength = json.getLong(Constant.KEY_LENGTH);
                         String main = json.getString(Constant.KEY_HOSTNAME);
-
-                        receiveFileFromRemote(fileName, length);
+                        if(fileBw != null){
+                            try {
+                                fileBw.close();
+                                fileBw = null;
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        fileBw = createFile(currFileName);
+                        if(fileBw != null)
+                            isFileTransfer = true;
+                        Log.d(TAG, "parseCommand: transfer status="+ isFileTransfer);
+                        return true;
                     }
+                    return false;
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+                return false;
             }
+            return false;
         }
+        return false;
     }
 
-    private void receiveFileFromRemote(String fileName, long length){
-        Log.d(TAG, "receiveFileFromRemote: filename="+ fileName+ ", length="+ length);
-
+    private FileOutputStream fileBw;
+    private FileOutputStream createFile(String fileName){
+        File file = new File("/mnt/sdcard/"+ fileName);
+        try {
+            if (!file.exists())
+                file.createNewFile();
+            return new FileOutputStream(file);
+        }catch (FileNotFoundException e){
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
+
 
 
 

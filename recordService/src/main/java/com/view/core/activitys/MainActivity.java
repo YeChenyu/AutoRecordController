@@ -342,12 +342,11 @@ public class MainActivity extends Activity {
 
         try {
             FileInputStream fis = new FileInputStream(mFile);
-            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-            String result = null;
-            while ((result=br.readLine()) != null){
-                byte[] array = result.getBytes();
-                ((MyApplication)getApplication()).getRemoteClient().writeData(array, array.length);
-            }
+                int ret = -1;
+                byte[] result = new byte[1024];
+                while ((ret = fis.read(result)) != -1) {
+                    ((MyApplication)getApplication()).getRemoteClient().writeData(result, ret);
+                }
             Log.d(TAG, "uploadFile: upload success");
         } catch (FileNotFoundException e) {
             e.printStackTrace();

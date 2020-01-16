@@ -211,35 +211,85 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     }
 
     public void onSearchRemote(View v){
-        JSONObject json = new JSONObject();
-        try {
-            json.put(Constant.KEY_CMD, Constant.CMD_SEARCH_REMOTE_LIST);
-            byte[] data = (json.toString()+ "\n").getBytes();
-            if(mClientThread == null){
-                Toast.makeText(mContext, "请确认是否成功连接服务器!", Toast.LENGTH_SHORT).show();
-                return ;
+        mContent.append("远程设备信息获取中...");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                JSONObject json = new JSONObject();
+                try {
+                    json.put(Constant.KEY_CMD, Constant.CMD_SEARCH_REMOTE_LIST);
+                    byte[] data = (json.toString()+ "\n").getBytes();
+                    if(mClientThread == null){
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, "请确认是否成功连接服务器!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        return ;
+                    }
+                    mClientThread.writeData(data, data.length);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
-            mClientThread.writeData(data, data.length);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        }).start();
     }
 
     public void onFetchRemoteData(View v){
-        JSONObject json = new JSONObject();
-        try {
-            json.put(Constant.KEY_CMD, Constant.CMD_FETCH_REMOTE_DEVICE);
-            String hostname = mIp.getText().toString().trim();
-            json.put(Constant.KEY_HOSTNAME, hostname);
-            byte[] data = (json.toString()+ "\n").getBytes();
-            if(mClientThread == null){
-                Toast.makeText(mContext, "请确认是否成功连接服务器!", Toast.LENGTH_SHORT).show();
-                return ;
+        mContent.append("正在远程操作中...");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                JSONObject json = new JSONObject();
+                try {
+                    json.put(Constant.KEY_CMD, Constant.CMD_FETCH_REMOTE_DEVICE);
+                    String hostname = mIp.getText().toString().trim();
+                    json.put(Constant.KEY_HOSTNAME, hostname);
+                    byte[] data = (json.toString()+ "\n").getBytes();
+                    if(mClientThread == null){
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, "请确认是否成功连接服务器!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        return ;
+                    }
+                    mClientThread.writeData(data, data.length);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
-            mClientThread.writeData(data, data.length);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        }).start();
+    }
+
+    public void onStopRemoteOpera(View v){
+        mContent.append("中止远程操作...");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                JSONObject json = new JSONObject();
+                try {
+                    json.put(Constant.KEY_CMD, Constant.CMD_STOP_REMOTE_OPERA);
+                    String hostname = mIp.getText().toString().trim();
+                    json.put(Constant.KEY_HOSTNAME, hostname);
+                    byte[] data = (json.toString()+ "\n").getBytes();
+                    if(mClientThread == null){
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, "请确认是否成功连接服务器!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        return ;
+                    }
+                    mClientThread.writeData(data, data.length);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     @Override
