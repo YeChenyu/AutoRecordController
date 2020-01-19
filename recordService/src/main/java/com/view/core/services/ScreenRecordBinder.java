@@ -85,7 +85,7 @@ public class ScreenRecordBinder extends ScreenRecord.Stub implements Handler.Cal
         }
         Log.d(TAG, "initRecordService: width="+ mRecordWidth);
         if(param.containsKey("KEY_DISPLAY_HEIGHT")){
-            mRecordHeight = param.getInt("KEY_DISPLAY_HEIGHY");
+            mRecordHeight = param.getInt("KEY_DISPLAY_HEIGHT");
         }else{
             mRecordHeight = 768;
         }
@@ -124,7 +124,7 @@ public class ScreenRecordBinder extends ScreenRecord.Stub implements Handler.Cal
         mMediaRecorder.setVideoSize(mRecordWidth, mRecordHeight);
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-        mMediaRecorder.setVideoEncodingBitRate((int) (mRecordWidth * mRecordHeight * 3.6));
+        mMediaRecorder.setVideoEncodingBitRate((int) (mRecordWidth * mRecordHeight * 5));
         mMediaRecorder.setVideoFrameRate(20);
 
         try {

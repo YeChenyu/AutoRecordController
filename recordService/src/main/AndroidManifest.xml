@@ -48,6 +48,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name="com.view.core.activitys.PhoneRecordActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            />
+
+        <activity android:name="com.view.core.activitys.ScreenRecordActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            />
+
         <service
             android:name="com.view.core.services.PhoneService"
             android:enabled="true"

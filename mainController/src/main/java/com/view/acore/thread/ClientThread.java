@@ -205,7 +205,7 @@ public class ClientThread extends Thread {
                         currFileName = json.getString(Constant.KEY_FILE);
                         fileLength = json.getLong(Constant.KEY_LENGTH);
                         String main = json.getString(Constant.KEY_HOSTNAME);
-                        if(fileBw != null){
+                        if (fileBw != null) {
                             try {
                                 fileBw.close();
                                 fileBw = null;
@@ -214,10 +214,15 @@ public class ClientThread extends Thread {
                             }
                         }
                         fileBw = createFile(currFileName);
-                        if(fileBw != null)
+                        if (fileBw != null)
                             isFileTransfer = true;
-                        Log.d(TAG, "parseCommand: transfer status="+ isFileTransfer);
+                        Log.d(TAG, "parseCommand: transfer status=" + isFileTransfer);
+                        mListener.onCommand(Constant.KEY_FILE, currFileName);
                         return true;
+                    }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_DEVICE)){
+                        if(!json.has(Constant.KEY_FILE)) {
+                            mListener.onCommand(Constant.KEY_FILE, null);
+                        }
                     }
                     return false;
                 }

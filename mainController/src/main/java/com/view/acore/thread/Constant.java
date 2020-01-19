@@ -18,8 +18,10 @@ public class Constant {
     public static final String CMD_FETCH_REMOTE_DEVICE  = "100001";
     public static final String CMD_RETURN_REMOTE_DEVICE  = "100002";
     public static final String CMD_STOP_REMOTE_OPERA    = "100003";
-    public static final String CMD_TRANSFER_PHONE_DATA    = "100004";
-    public static final String CMD_REANSFER_SCREEN_DATA    = "100005";
+    public static final String CMD_FETCH_REMOTE_PHONE    = "100004";
+    public static final String CMD_STOP_REMOTE_PHONE    = "100005";
+    public static final String CMD_FETCH_REMOTE_SCREEN    = "100006";
+    public static final String CMD_STOP_REMOTE_SCREEN    = "100007";
 
 
     public static final String KEY_CMD = "CMD";
@@ -32,6 +34,6 @@ public class Constant {
     public static final String TYPE_PHONE = "type_phone";
     public static final String TYPE_SCREEN = "type_screen";
 
-    public static final String FILE_PHONE = "phone.3gp";
-    public static final String FILE_SCREEN = "screen.mp4";
+    public static final String FILE_PHONE = "record_phone.3gp";
+    public static final String FILE_SCREEN = "record_screen.mp4";
 }

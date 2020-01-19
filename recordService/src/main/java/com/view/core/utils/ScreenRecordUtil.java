@@ -49,7 +49,12 @@ public class ScreenRecordUtil {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         mScreenWidth = metrics.widthPixels;
         mScreenHeight = metrics.heightPixels;
+        if(mScreenWidth==0 || mScreenHeight==0){
+            mScreenWidth = 1080;
+            mScreenHeight = 1920;
+        }
         mScreenDpi = metrics.densityDpi;
+
         return true;
     }
 
@@ -92,10 +97,15 @@ public class ScreenRecordUtil {
 
 
     public int getScreenWidth(){
+        if(mScreenWidth == 0)
+            return 1080;
         return mScreenWidth;
     }
 
     public int getScreenHeight(){
+        if(mScreenHeight == 0){
+            return 1920;
+        }
         return mScreenHeight;
     }
 

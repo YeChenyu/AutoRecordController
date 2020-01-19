@@ -103,81 +103,87 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     private static final int CMD_CONNECTION_FAILED = 5;
     private static final int CMD_ERROR = 6;
     public void onConnectServer(View v){
-        mClientThread = new ClientThread(mContext, mHandler, new OnClientListener(){
+        if(mClientThread == null) {
+            mClientThread = new ClientThread(mContext, mHandler, new OnClientListener() {
 
-            @Override
-            public void onStartConnect() {
-                Message msg = mHandler.obtainMessage(CMD_START_CONNECT);
-                mHandler.sendMessage(msg);
-            }
+                @Override
+                public void onStartConnect() {
+                    Message msg = mHandler.obtainMessage(CMD_START_CONNECT);
+                    mHandler.sendMessage(msg);
+                }
 
-            @Override
-            public void onConnected(String host, int port) {
-                Message msg = mHandler.obtainMessage(CMD_CONNECTED);
-                msg.obj = host;
-                msg.arg1 = port;
-                mHandler.sendMessage(msg);
-            }
+                @Override
+                public void onConnected(String host, int port) {
+                    Message msg = mHandler.obtainMessage(CMD_CONNECTED);
+                    msg.obj = host;
+                    msg.arg1 = port;
+                    mHandler.sendMessage(msg);
+                }
 
-            @Override
-            public void onAuthenticateFailed() {
-                Message msg = mHandler.obtainMessage(CMD_AUTHENTICATE_FAILED);
-                mHandler.sendMessage(msg);
-            }
+                @Override
+                public void onAuthenticateFailed() {
+                    Message msg = mHandler.obtainMessage(CMD_AUTHENTICATE_FAILED);
+                    mHandler.sendMessage(msg);
+                }
 
-            @Override
-            public void onAuthenticateSuccess() {
-                Message msg = mHandler.obtainMessage(CMD_AUTHENTICATE_SUCCESS);
-                mHandler.sendMessage(msg);
-            }
+                @Override
+                public void onAuthenticateSuccess() {
+                    Message msg = mHandler.obtainMessage(CMD_AUTHENTICATE_SUCCESS);
+                    mHandler.sendMessage(msg);
+                }
 
-            @Override
-            public void onCommand(String cmd, String json) {
-                Message msg = mHandler.obtainMessage(CMD_COMMAND);
-                msg.arg1 = (cmd.equals(Constant.KEY_LIST) ? 1 : 2);
-                msg.obj = json;
-                mHandler.sendMessage(msg);
-            }
+                @Override
+                public void onCommand(String cmd, String json) {
+                    Message msg = mHandler.obtainMessage(CMD_COMMAND);
+                    msg.arg1 = (cmd.equals(Constant.KEY_LIST) ? 1 : 2);
+                    msg.obj = json;
+                    mHandler.sendMessage(msg);
+                }
 
-            @Override
-            public void onConnectionFailed(String message) {
-                Message msg = mHandler.obtainMessage(CMD_CONNECTION_FAILED);
-                msg.obj = message;
-                mHandler.sendMessage(msg);
-            }
+                @Override
+                public void onConnectionFailed(String message) {
+                    Message msg = mHandler.obtainMessage(CMD_CONNECTION_FAILED);
+                    msg.obj = message;
+                    mHandler.sendMessage(msg);
+                }
 
-            @Override
-            public void onError(int errCode, String errMessage) {
+                @Override
+                public void onError(int errCode, String errMessage) {
 
-            }
-        });
-        mClientThread.start();
+                }
+            });
+            mClientThread.start();
+        }
     }
 
     @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
             case CMD_START_CONNECT:
-                mContent.append("正在连接服务器...\r\n");
+                appendMessageToContent("正在连接服务器...");
                 break;
             case CMD_CONNECTED:
-                mContent.append("连接成功！！！！！！！！！\r\n");
-                mContent.append("ip: "+ (String)msg.obj+ "\r\n");
-                mContent.append("port: "+ msg.arg1+ "\r\n");
+                appendMessageToContent("连接成功！！！！！！！！！");
+                appendMessageToContent("ip: "+ (String)msg.obj+ "");
+                appendMessageToContent("port: "+ msg.arg1+ "");
                 break;
             case CMD_AUTHENTICATE_FAILED:
-                mContent.append("认证失败！\r\n");
+                appendMessageToContent("认证失败！");
                 if(mClientThread != null){
                     mClientThread.interrupt();
                     mClientThread = null;
                 }
                 break;
             case CMD_AUTHENTICATE_SUCCESS:
-                mContent.append("认证成功！！！！！！！！！\r\n");
+                appendMessageToContent("认证成功！！！！！！！！！");
                 break;
             case CMD_COMMAND:
                 String json = (String)msg.obj;
+                Log.d(TAG, "handleMessage: cmd="+ msg.arg1+ ", data="+ json);
                 if(msg.arg1 == 1){
+                    /**
+                     * 接收设备列表
+                     */
                     try {
                         JSONArray jsonArray = new JSONArray(json);
                         boolean hasRemote = false;
@@ -188,30 +194,37 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                                 if(host.contains(mClientThread.getHostName()))
                                     continue;
                                 hasRemote = true;
-                                mContent.append("Device"+ (i+1)+ ": "+ host+ "\r\n");
+                                appendMessageToContent("Device"+ (i+1)+ ": "+ host+ "");
                             }
                         }
                         if(!hasRemote)
-                            mContent.append("暂无设备连接！\r\n");
+                            appendMessageToContent("暂无设备连接！");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                }else if(msg.what == 2){
-
+                /**
+                 * 文件传输
+                 */
+                }else if(msg.arg1 == 2){
+                    if(json == null){
+                        appendMessageToContent("暂无文件！");
+                    }else{
+                        appendMessageToContent("接收文件："+ json+ " 请在文件管理器中确认！");
+                    }
                 }
                 Toast.makeText(mContext, (String)msg.obj, Toast.LENGTH_SHORT).show();
                 break;
             case CMD_CONNECTION_FAILED:
-                mContent.append("连接失败:"+ (String)msg.obj+ "\r\n");
+                appendMessageToContent("连接失败:"+ (String)msg.obj+ "");
                 break;
-            default: mContent.append("未知错误...\r\n");
+            default: appendMessageToContent("未知错误...");
                 break;
         }
         return false;
     }
 
     public void onSearchRemote(View v){
-        mContent.append("远程设备信息获取中...");
+        appendMessageToContent("远程设备信息获取中...");
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -237,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     }
 
     public void onFetchRemoteData(View v){
-        mContent.append("正在远程操作中...");
+        appendMessageToContent("获取服务器文件...");
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -264,14 +277,99 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
         }).start();
     }
 
-    public void onStopRemoteOpera(View v){
-        mContent.append("中止远程操作...");
+    public void onFetchRemotePhone(View v){
+        appendMessageToContent("正在远程录音中...");
         new Thread(new Runnable() {
             @Override
             public void run() {
                 JSONObject json = new JSONObject();
                 try {
-                    json.put(Constant.KEY_CMD, Constant.CMD_STOP_REMOTE_OPERA);
+                    json.put(Constant.KEY_CMD, Constant.CMD_FETCH_REMOTE_PHONE);
+                    String hostname = mIp.getText().toString().trim();
+                    json.put(Constant.KEY_HOSTNAME, hostname);
+                    byte[] data = (json.toString()+ "\n").getBytes();
+                    if(mClientThread == null){
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, "请确认是否成功连接服务器!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        return ;
+                    }
+                    mClientThread.writeData(data, data.length);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+
+    public void onStopRemotePhone(View v){
+        appendMessageToContent("中止远程录音操作...");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                JSONObject json = new JSONObject();
+                try {
+                    json.put(Constant.KEY_CMD, Constant.CMD_STOP_REMOTE_PHONE);
+                    String hostname = mIp.getText().toString().trim();
+                    json.put(Constant.KEY_HOSTNAME, hostname);
+                    byte[] data = (json.toString()+ "\n").getBytes();
+                    if(mClientThread == null){
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, "请确认是否成功连接服务器!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        return ;
+                    }
+                    mClientThread.writeData(data, data.length);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    public void onFetchRemoteScreen(View v){
+        appendMessageToContent("正在远程录屏中...");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                JSONObject json = new JSONObject();
+                try {
+                    json.put(Constant.KEY_CMD, Constant.CMD_FETCH_REMOTE_SCREEN);
+                    String hostname = mIp.getText().toString().trim();
+                    json.put(Constant.KEY_HOSTNAME, hostname);
+                    byte[] data = (json.toString()+ "\n").getBytes();
+                    if(mClientThread == null){
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, "请确认是否成功连接服务器!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        return ;
+                    }
+                    mClientThread.writeData(data, data.length);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    public void onStopRemoteScreen(View v){
+        appendMessageToContent("中止远程录屏操作...");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                JSONObject json = new JSONObject();
+                try {
+                    json.put(Constant.KEY_CMD, Constant.CMD_STOP_REMOTE_SCREEN);
                     String hostname = mIp.getText().toString().trim();
                     json.put(Constant.KEY_HOSTNAME, hostname);
                     byte[] data = (json.toString()+ "\n").getBytes();
@@ -303,5 +401,15 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
             mThread.interrupt();
             mThread = null;
         }
+    }
+
+    private void appendMessageToContent(String message){
+        mContent.append(message+ "\r\n");
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mContent.scrollTo(0, View.SCROLL_INDICATOR_BOTTOM);
+            }
+        }, 200);
     }
 }

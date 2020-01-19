@@ -78,14 +78,44 @@
                 android:layout_width="0px"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="获取信息"
+                android:text="获取远程信息"
                 android:onClick="onFetchRemoteData"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
             <Button
                 android:layout_width="0px"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="远程操作结束"
-                android:onClick="onStopRemoteOpera"/>
+                android:text="开始录音"
+                android:onClick="onFetchRemotePhone"/>
+            <Button
+                android:layout_width="0px"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="远程录音结束"
+                android:onClick="onStopRemotePhone"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+            <Button
+                android:layout_width="0px"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="开始录屏"
+                android:onClick="onFetchRemoteScreen"/>
+            <Button
+                android:layout_width="0px"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="远程录屏结束"
+                android:onClick="onStopRemoteScreen"/>
         </LinearLayout>
     </LinearLayout>
 

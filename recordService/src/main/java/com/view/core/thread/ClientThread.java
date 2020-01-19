@@ -5,8 +5,6 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.view.core.MyApplication;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -17,7 +15,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -93,12 +90,14 @@ public class ClientThread extends Thread {
                     if (address != null) {
                         Log.d(TAG, "run: server path=" + address.toString() +
                                 ", status=" + socket.isConnected());
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(mContext, "Server: " + address.toString(), Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        if(Constant.isDebug) {
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(mContext, "Server: " + address.toString(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
                     }
                     try {
                         mListener.onConnected(address.toString(), socket.getPort());
@@ -174,11 +173,15 @@ public class ClientThread extends Thread {
                 JSONObject json = new JSONObject(data);
                 if(json.has(Constant.KEY_CMD)){
                     String cmd = (String) json.get(Constant.KEY_CMD);
-                    if(cmd.equals(Constant.CMD_FETCH_REMOTE_DEVICE)){
+                    if(cmd.equals(Constant.CMD_FETCH_REMOTE_DEVICE)
+                            || cmd.equals(Constant.CMD_FETCH_REMOTE_PHONE)
+                            || cmd.equals(Constant.CMD_FETCH_REMOTE_SCREEN)){
                         //开始进行远程操作
                         String hostname = (String) json.get(Constant.KEY_HOSTNAME);
                         mListener.onCommand(cmd, hostname);
-                    }else if(cmd.equals(Constant.CMD_STOP_REMOTE_OPERA)){
+                    }else if(cmd.equals(Constant.CMD_STOP_REMOTE_OPERA)
+                            || cmd.equals(Constant.CMD_STOP_REMOTE_PHONE)
+                            || cmd.equals(Constant.CMD_STOP_REMOTE_SCREEN)){
                         //停止远程操作
                         String hostname = (String) json.get(Constant.KEY_HOSTNAME);
                         mListener.onCommand(cmd, hostname);
