@@ -1,16 +1,16 @@
 package com.view.acore.thread;
 
 /**
- * @author: yechenyu
+ * @author: xxx
  * @create: 2020/1/8 下午9:26
- * @email: Yecynull@163.com
+ * @email: xxx
  * @version:
  * @descripe:
  **/
 public class Constant {
 
-        public static String SERVER_IP = "101.133.174.68";
-//    public static String SERVER_IP = "172.20.10.2";
+//    public static String SERVER_IP = "101.133.174.68";//实际服务器IP
+    public static String SERVER_IP = "172.20.10.2";//测试IP，如果想在局域网测试，则将其改为服务器局域网IP
     public static final int SERVER_PORT = 8080;
     public static final int SERVER_CONNECT_TIMEOUT = 30*1000;
 
@@ -23,6 +23,10 @@ public class Constant {
     public static final String CMD_FETCH_REMOTE_SCREEN    = "100006";
     public static final String CMD_STOP_REMOTE_SCREEN    = "100007";
 
+    public static final String CMD_TRANSFER_REMOTE_DATA    = "100008";
+    public static final String CMD_FETCH_REMOTE_LOCATION    = "100009";
+
+
 
     public static final String KEY_CMD = "CMD";
     public static final String KEY_LIST = "LIST";
@@ -30,6 +34,8 @@ public class Constant {
     public static final String KEY_FILE = "FILE";
     public static final String KEY_LENGTH = "LENGTH";
     public static final String KEY_DATA = "DATA";
+    public static final String KEY_LONGITUDE = "LONGITUDE";
+    public static final String KEY_LATITUDE= "LATITUDE";
 
     public static final String TYPE_PHONE = "type_phone";
     public static final String TYPE_SCREEN = "type_screen";

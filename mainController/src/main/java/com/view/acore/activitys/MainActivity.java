@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
 
     private Handler mHandler = new Handler(this);
 
+    private ScrollView scrollView;
     private TextView mContent;
     private EditText mIp, mPort;
 
@@ -60,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
         String IP = getlocalip();
         if(IP == null || IP.equals("0.0.0.0"))
             IP = getLocalIpAddress();
+        scrollView = findViewById(R.id.scrollview);
         mContent = ((TextView)findViewById(R.id.content));
         mContent.setText("本机地址："+ IP+ "\r\n");
 
@@ -135,7 +138,14 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                 @Override
                 public void onCommand(String cmd, String json) {
                     Message msg = mHandler.obtainMessage(CMD_COMMAND);
-                    msg.arg1 = (cmd.equals(Constant.KEY_LIST) ? 1 : 2);
+                    msg.arg1 = 0;
+                    if(cmd.equals(Constant.KEY_LIST)){
+                        msg.arg1 = 1;
+                    }else if(cmd.equals(Constant.KEY_FILE)){
+                        msg.arg1 = 2;
+                    }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_LOCATION)){
+                        msg.arg1 = 3;
+                    }
                     msg.obj = json;
                     mHandler.sendMessage(msg);
                 }
@@ -211,6 +221,19 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     }else{
                         appendMessageToContent("接收文件："+ json+ " 请在文件管理器中确认！");
                     }
+                }else if(msg.arg1 == 3){
+                    if(json == null){
+                        appendMessageToContent("无法获取位置信息！");
+                    }else{
+                        try {
+                            JSONObject jsonObj = new JSONObject(json);
+                            appendMessageToContent("位置："+ jsonObj.getString(Constant.KEY_LONGITUDE)+
+                                    " "+ jsonObj.getString(Constant.KEY_LATITUDE));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            appendMessageToContent("无法获取位置信息！");
+                        }
+                    }
                 }
                 Toast.makeText(mContext, (String)msg.obj, Toast.LENGTH_SHORT).show();
                 break;
@@ -224,6 +247,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     }
 
     public void onSearchRemote(View v){
+        if(isDoubleClick()) return;
         appendMessageToContent("远程设备信息获取中...");
         new Thread(new Runnable() {
             @Override
@@ -250,6 +274,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     }
 
     public void onFetchRemoteData(View v){
+        if(isDoubleClick()) return;
         appendMessageToContent("获取服务器文件...");
         new Thread(new Runnable() {
             @Override
@@ -278,6 +303,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     }
 
     public void onFetchRemotePhone(View v){
+        if(isDoubleClick()) return;
         appendMessageToContent("正在远程录音中...");
         new Thread(new Runnable() {
             @Override
@@ -307,6 +333,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
 
 
     public void onStopRemotePhone(View v){
+        if(isDoubleClick()) return;
         appendMessageToContent("中止远程录音操作...");
         new Thread(new Runnable() {
             @Override
@@ -335,6 +362,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     }
 
     public void onFetchRemoteScreen(View v){
+        if(isDoubleClick()) return;
         appendMessageToContent("正在远程录屏中...");
         new Thread(new Runnable() {
             @Override
@@ -363,6 +391,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     }
 
     public void onStopRemoteScreen(View v){
+        if(isDoubleClick()) return;
         appendMessageToContent("中止远程录屏操作...");
         new Thread(new Runnable() {
             @Override
@@ -370,6 +399,35 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                 JSONObject json = new JSONObject();
                 try {
                     json.put(Constant.KEY_CMD, Constant.CMD_STOP_REMOTE_SCREEN);
+                    String hostname = mIp.getText().toString().trim();
+                    json.put(Constant.KEY_HOSTNAME, hostname);
+                    byte[] data = (json.toString()+ "\n").getBytes();
+                    if(mClientThread == null){
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, "请确认是否成功连接服务器!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        return ;
+                    }
+                    mClientThread.writeData(data, data.length);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    public void onFetchRemoteLocation(View v){
+        if(isDoubleClick(500)) return;
+        appendMessageToContent("获取远程设备位置信息...");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                JSONObject json = new JSONObject();
+                try {
+                    json.put(Constant.KEY_CMD, Constant.CMD_FETCH_REMOTE_LOCATION);
                     String hostname = mIp.getText().toString().trim();
                     json.put(Constant.KEY_HOSTNAME, hostname);
                     byte[] data = (json.toString()+ "\n").getBytes();
@@ -408,8 +466,29 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                mContent.scrollTo(0, View.SCROLL_INDICATOR_BOTTOM);
+                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
             }
-        }, 200);
+        }, 300);
+    }
+
+    private long startTime = 0;
+    private boolean isDoubleClick(int max){
+        long time = System.currentTimeMillis() - startTime;
+        if(time > max){
+            startTime = System.currentTimeMillis();
+            return false;
+        }else{
+            return true;
+        }
+    }
+
+    private boolean isDoubleClick(){
+        long time = System.currentTimeMillis() - startTime;
+        if(time > 1000){
+            startTime = System.currentTimeMillis();
+            return false;
+        }else{
+            return true;
+        }
     }
 }

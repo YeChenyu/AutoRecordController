@@ -223,6 +223,13 @@ public class ClientThread extends Thread {
                         if(!json.has(Constant.KEY_FILE)) {
                             mListener.onCommand(Constant.KEY_FILE, null);
                         }
+                    }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_LOCATION)){
+                        if(json.has(Constant.KEY_LONGITUDE) && json.has(Constant.KEY_LATITUDE)){
+                            mListener.onCommand(Constant.CMD_FETCH_REMOTE_LOCATION, data);
+                        }else{
+                            mListener.onCommand(Constant.CMD_FETCH_REMOTE_LOCATION, null);
+                        }
+                        return false;
                     }
                     return false;
                 }

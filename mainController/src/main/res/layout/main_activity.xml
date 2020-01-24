@@ -8,6 +8,7 @@
     tools:context="com.view.acore.activitys.MainActivity">
 
     <ScrollView
+        android:id="@+id/scrollview"
         android:layout_width="match_parent"
         android:layout_height="0px"
         android:layout_weight="1"
@@ -39,7 +40,7 @@
                 android:layout_width="0px"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="查看远程设备"
+                android:text="查看远程设备列表"
                 android:onClick="onSearchRemote"
                 />
         </LinearLayout>
@@ -78,7 +79,7 @@
                 android:layout_width="0px"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="获取远程信息"
+                android:text="获取服务器数据"
                 android:onClick="onFetchRemoteData"/>
         </LinearLayout>
         <LinearLayout
@@ -90,13 +91,13 @@
                 android:layout_width="0px"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="开始录音"
+                android:text="开始远程录音"
                 android:onClick="onFetchRemotePhone"/>
             <Button
                 android:layout_width="0px"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="远程录音结束"
+                android:text="中止远程录音"
                 android:onClick="onStopRemotePhone"/>
         </LinearLayout>
         <LinearLayout
@@ -108,14 +109,33 @@
                 android:layout_width="0px"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="开始录屏"
+                android:text="开始远程录屏"
                 android:onClick="onFetchRemoteScreen"/>
             <Button
                 android:layout_width="0px"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="远程录屏结束"
+                android:text="中止远程录屏"
                 android:onClick="onStopRemoteScreen"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+            <Button
+                android:layout_width="0px"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="获取远程设备位置"
+                android:onClick="onFetchRemoteLocation"/>
+            <Button
+                android:layout_width="0px"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="远程录屏结束"
+                android:onClick="onStopRemoteScreen"
+                android:visibility="gone"/>
         </LinearLayout>
     </LinearLayout>
 

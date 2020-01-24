@@ -109,6 +109,9 @@ public class ScreenRecordBinder extends ScreenRecord.Stub implements Handler.Cal
             return ;
         }
 
+        if (mMediaProjection == null){
+            mMediaProjection = mProjectionManager.getMediaProjection(mResultCode,mResultData);
+        }
         mProjectionManager = (MediaProjectionManager) mContext.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         if (mProjectionManager != null){
             mMediaProjection = mProjectionManager.getMediaProjection(mResultCode, mResultData);
@@ -124,17 +127,13 @@ public class ScreenRecordBinder extends ScreenRecord.Stub implements Handler.Cal
         mMediaRecorder.setVideoSize(mRecordWidth, mRecordHeight);
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-        mMediaRecorder.setVideoEncodingBitRate((int) (mRecordWidth * mRecordHeight * 5));
+        mMediaRecorder.setVideoEncodingBitRate((int) (mRecordWidth * mRecordHeight * 3.6));
         mMediaRecorder.setVideoFrameRate(20);
 
         try {
             mMediaRecorder.prepare();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-        if (mMediaProjection == null){
-            mMediaProjection = mProjectionManager.getMediaProjection(mResultCode,mResultData);
         }
 
         mVirtualDisplay = mMediaProjection.createVirtualDisplay("MainScreen", mRecordWidth, mRecordHeight, mScreenDpi,
@@ -190,7 +189,6 @@ public class ScreenRecordBinder extends ScreenRecord.Stub implements Handler.Cal
         }
 
         mMediaProjection = null;
-
         mHandler.removeMessages(MSG_TYPE_COUNT_DOWN);
         mListener.onRecordStop(0);
 

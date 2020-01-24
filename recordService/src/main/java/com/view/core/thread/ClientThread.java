@@ -5,6 +5,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.view.core.utils.LocationUtil;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -170,6 +172,7 @@ public class ClientThread extends Thread {
     private void parseCommand(String data){
         if(data != null){
             try {
+                Log.d(TAG, "parseCommand: data="+ data);
                 JSONObject json = new JSONObject(data);
                 if(json.has(Constant.KEY_CMD)){
                     String cmd = (String) json.get(Constant.KEY_CMD);
@@ -185,6 +188,16 @@ public class ClientThread extends Thread {
                         //停止远程操作
                         String hostname = (String) json.get(Constant.KEY_HOSTNAME);
                         mListener.onCommand(cmd, hostname);
+                    }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_LOCATION)){
+                        double[] location = LocationUtil.getInstance().getLocationInfo();
+                        if(location != null){
+                            Log.d(TAG, "location info="+ location[0]+ ", "+ location[1]);
+                            json.put(Constant.KEY_LONGITUDE, location[0]);
+                            json.put(Constant.KEY_LATITUDE, location[1]);
+
+                            byte[] result = (json.toString()+"\n").getBytes();
+                            writeData(result, result.length);
+                        }
                     }
                 }
             } catch (JSONException e) {
