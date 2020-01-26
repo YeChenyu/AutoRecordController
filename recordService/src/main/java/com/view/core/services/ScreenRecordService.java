@@ -20,6 +20,7 @@ import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 
+import com.view.core.thread.Constant;
 import com.view.core.utils.CommonUtil;
 import com.view.core.utils.FileUtil;
 
@@ -209,7 +210,7 @@ public class ScreenRecordService extends Service implements Handler.Callback{
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void setUpMediaRecorder() {
 
-        mRecordFilePath = getSaveDirectory()  + File.separator+  "screen_record.mp4";
+        mRecordFilePath = getSaveDirectory()  + File.separator+ Constant.FILE_SCREEN;
         if (mMediaRecorder == null){
             mMediaRecorder = new MediaRecorder();
         }

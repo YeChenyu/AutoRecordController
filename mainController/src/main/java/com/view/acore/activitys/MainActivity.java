@@ -1,13 +1,21 @@
 package com.view.acore.activitys;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ScrollView;
@@ -24,6 +32,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -489,6 +498,45 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
             return false;
         }else{
             return true;
+        }
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, 0, 1, "文件预览");
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case 0:
+                onPreShowFileExplore();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void onPreShowFileExplore(){
+        Log.d(TAG, "onPreShowFileExplore: executed");
+        if(Build.VERSION.SDK_INT < 25) {
+            //获取父目录
+            File file = new File("/mnt/sdcard/"+ Constant.FILE_SCREEN);
+            File parentFlie = new File(file.getParent());
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setDataAndType(Uri.fromFile(parentFlie), "*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivity(intent);
+        }else{
+            //获取到指定文件夹，这里为：/storage/emulated/0/Android/data/你的包	名/files/Download
+            File file = new File("/mnt/sdcard/"+ Constant.FILE_SCREEN);
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            //7.0以上跳转系统文件需用FileProvider，参考链接：https://blog.csdn.net/growing_tree/article/details/71190741
+            Uri uri = FileProvider.getUriForFile(mContext,getPackageName()+ ".FileProvider", file);
+            intent.setData(uri);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(intent,200);
         }
     }
 }
