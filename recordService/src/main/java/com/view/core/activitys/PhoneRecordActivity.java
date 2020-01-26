@@ -154,6 +154,14 @@ public class PhoneRecordActivity extends Activity {
         @Override
         public void onRecordStart() throws RemoteException {
             Log.d(TAG, "onRecordStart: executed");
+            if(Constant.isDebug) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(mContext, "开始录音", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
             ClientThread thread = ((MyApplication)getApplication()).getRemoteClient();
             if(thread != null) thread.hangUp(true);
         }
@@ -175,6 +183,14 @@ public class PhoneRecordActivity extends Activity {
         public void onRecordSuccess(String filePath) throws RemoteException {
             Log.d(TAG, "onRecordSuccess: path="+ filePath);
             mPhoneFile = filePath;
+            if(Constant.isDebug) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(mContext, "录音成功", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         }
 
         @Override
@@ -188,6 +204,14 @@ public class PhoneRecordActivity extends Activity {
                 ClientThread thread = ((MyApplication)getApplication()).getRemoteClient();
                 if(thread != null) thread.hangUp(false);
                 Thread.sleep(1000);
+                if(Constant.isDebug) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(mContext, "开始上传文件", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
                 uploadFile(mPhoneFile, Constant.TYPE_PHONE);
 
                 unbindService(getPhoneServiceConnection());
@@ -245,6 +269,14 @@ public class PhoneRecordActivity extends Activity {
                 while ((ret = fis.read(result)) != -1) {
                     ((MyApplication)getApplication()).getRemoteClient().writeData(result, ret);
                 }
+            if(Constant.isDebug) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(mContext, "上传成功", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
             Log.d(TAG, "uploadFile: upload success");
         } catch (FileNotFoundException e) {
             e.printStackTrace();

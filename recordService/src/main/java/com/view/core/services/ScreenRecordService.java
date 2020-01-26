@@ -18,6 +18,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
+import android.widget.Toast;
 
 
 import com.view.core.thread.Constant;
@@ -36,6 +37,7 @@ import Android.view.core.R;
 
 public class ScreenRecordService extends Service implements Handler.Callback{
 
+    private Context mContext;
     private MediaProjectionManager mProjectionManager;
     private MediaProjection mMediaProjection;
     private MediaRecorder mMediaRecorder;
@@ -72,7 +74,7 @@ public class ScreenRecordService extends Service implements Handler.Callback{
     @Override
     public void onCreate() {
         super.onCreate();
-
+        mContext = getApplicationContext();
 
         mIsRunning = false;
         mMediaRecorder = new MediaRecorder();
@@ -126,7 +128,14 @@ public class ScreenRecordService extends Service implements Handler.Callback{
             mMediaProjection = mProjectionManager.getMediaProjection(mResultCode,mResultData);
 
         }
-
+        if(Constant.isDebug) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mContext, "开始录屏", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
         setUpMediaRecorder();
         mMediaRecorder.start();
         createVirtualDisplay();
@@ -147,7 +156,14 @@ public class ScreenRecordService extends Service implements Handler.Callback{
             return false;
         }
         mIsRunning = false;
-
+        if(Constant.isDebug) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mContext, "停止录屏", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
         try {
             mMediaRecorder.stop();
             mMediaRecorder.reset();

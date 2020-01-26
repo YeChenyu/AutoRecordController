@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -40,6 +41,8 @@ public class ScreenRecordActivity extends Activity {
     private int REQUEST_CODE = 1;
     private String remoteHost;
     private String mScreenFile;
+
+    private Handler mHandler = new Handler();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -125,6 +128,14 @@ public class ScreenRecordActivity extends Activity {
                 ClientThread thread = ((MyApplication)getApplication()).getRemoteClient();
                 if(thread != null) thread.hangUp(false);
                 Thread.sleep(1000);
+                if(Constant.isDebug) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(mContext, "开始上传文件", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
                 uploadFile(mScreenFile, Constant.TYPE_SCREEN);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -163,6 +174,14 @@ public class ScreenRecordActivity extends Activity {
                 ((MyApplication)getApplication()).getRemoteClient().writeData(result, ret);
             }
             Log.d(TAG, "uploadFile: upload success");
+            if(Constant.isDebug) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(mContext, "上传成功", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

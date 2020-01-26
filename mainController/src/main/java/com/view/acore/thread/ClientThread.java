@@ -214,11 +214,14 @@ public class ClientThread extends Thread {
                             }
                         }
                         fileBw = createFile(currFileName);
-                        if (fileBw != null)
+                        if (fileBw != null) {
                             isFileTransfer = true;
-                        Log.d(TAG, "parseCommand: transfer status=" + isFileTransfer);
-                        mListener.onCommand(Constant.KEY_FILE, currFileName);
-                        return true;
+                            Log.d(TAG, "parseCommand: transfer status=" + isFileTransfer);
+                            mListener.onCommand(Constant.KEY_FILE, currFileName);
+                            return true;
+                        }else{
+                            return false;
+                        }
                     }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_DEVICE)){
                         if(!json.has(Constant.KEY_FILE)) {
                             mListener.onCommand(Constant.KEY_FILE, null);
