@@ -1,1 +1,1 @@
-include ':mainController', ':recordService'
+include ':mainController', ':recordService', ':commonlibrary'

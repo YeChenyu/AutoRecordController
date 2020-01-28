@@ -182,6 +182,7 @@ public class ScreenRecordActivity extends Activity {
                     }
                 });
             }
+            mFile.delete();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

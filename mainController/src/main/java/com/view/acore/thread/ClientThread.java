@@ -24,9 +24,9 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 
 /**
- * @author: yechenyu
+ * @author:  xxx
  * @create: 2020/1/5 上午9:24
- * @email: Yecynull@163.com
+ * @email:  xxx.xxx.xxx
  * @version:
  * @descripe:
  **/
@@ -247,7 +247,7 @@ public class ClientThread extends Thread {
 
     private FileOutputStream fileBw;
     private FileOutputStream createFile(String fileName){
-        File file = new File("/mnt/sdcard/"+ fileName);
+        File file = new File("/mnt/sdcard/"+ fileName.replace(".", "_"+ System.currentTimeMillis()+ "."));
         try {
             if (!file.exists())
                 file.createNewFile();

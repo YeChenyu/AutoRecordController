@@ -44,6 +44,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import com.view.core.activitys.PhoneRecordActivity.PhoneServiceConnection;
 
 import Android.view.core.R;
 
@@ -91,38 +92,12 @@ public class MainActivity extends Activity {
         ((TextView)findViewById(R.id.content)).setText(getlocalip());
     }
 
-    private ServiceConnection getPhoneServiceConnection(){
-        ServiceConnection connection = ((MyApplication)getApplication()).getPhoneServiceConnection();
-        if(connection == null){
-            connection = new ServiceConnection() {
-                private PhoneRecord record;
-                @Override
-                public void onServiceConnected(ComponentName name, IBinder service) {
-                    Log.d(TAG, "onServiceConnected: the service is binded");
-                    record = PhoneRecordBinder.asInterface(service);
-                    Bundle param = new Bundle();
-                    param.putString("KEY_RECORD_FILE", "/mnt/sdcard/"+ Constant.FILE_PHONE);
-                    try {
-                        record.initRecordService(param, mPhoneRecordListener);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
-                @Override
-                public void onServiceDisconnected(ComponentName name) {
-                    if(record != null){
-                        try {
-                            record.stopRecord();
-                        } catch (RemoteException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            };
-            ((MyApplication)getApplication()).setPhoneServiceConnection(connection);
-        }
+    private PhoneServiceConnection getPhoneServiceConnection(){
+        PhoneServiceConnection connection = ((MyApplication)getApplication()).getPhoneServiceConnection();
+
         return connection;
     }
+
 
     private ServiceConnection getScreenServiceConnection(){
         ServiceConnection connection = ((MyApplication)getApplication()).getScreenServiceConnection();

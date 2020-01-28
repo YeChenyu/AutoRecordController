@@ -11,9 +11,9 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 
 /**
- * @author: yechenyu
+ * @author:  xxx
  * @create: 2019/12/30 下午8:56
- * @email: Yecynull@163.com
+ * @email:  xxx.xxx.xxx
  * @version:
  * @descripe:
  **/

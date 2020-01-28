@@ -73,37 +73,41 @@ public class PhoneRecordActivity extends Activity {
         ((TextView)findViewById(R.id.content)).setText(getlocalip());
     }
 
-    private ServiceConnection getPhoneServiceConnection(){
-        ServiceConnection connection = ((MyApplication)getApplication()).getPhoneServiceConnection();
+    public PhoneServiceConnection getPhoneServiceConnection(){
+        PhoneServiceConnection connection = ((MyApplication)getApplication()).getPhoneServiceConnection();
         if(connection == null){
-            connection = new ServiceConnection() {
-                private PhoneRecord record;
-                @Override
-                public void onServiceConnected(ComponentName name, IBinder service) {
-                    Log.d(TAG, "onServiceConnected: the service is binded");
-                    record = PhoneRecordBinder.asInterface(service);
-                    Bundle param = new Bundle();
-                    param.putString("KEY_RECORD_FILE", "/mnt/sdcard/"+ Constant.FILE_PHONE);
-                    try {
-                        record.initRecordService(param, mPhoneRecordListener);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
-                @Override
-                public void onServiceDisconnected(ComponentName name) {
-                    if(record != null){
-                        try {
-                            record.stopRecord();
-                        } catch (RemoteException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            };
+            connection = new PhoneServiceConnection();
             ((MyApplication)getApplication()).setPhoneServiceConnection(connection);
         }
         return connection;
+    }
+
+    public class PhoneServiceConnection implements ServiceConnection {
+
+        public PhoneRecord record;
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "onServiceConnected: the service is binded");
+            record = PhoneRecordBinder.asInterface(service);
+            Bundle param = new Bundle();
+            param.putString("KEY_RECORD_FILE", "/mnt/sdcard/"+ Constant.FILE_PHONE);
+            try {
+                record.initRecordService(param, mPhoneRecordListener);
+                record.startRecord();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            if(record != null){
+                try {
+                    record.stopRecord();
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     private String getlocalip() {
@@ -277,6 +281,7 @@ public class PhoneRecordActivity extends Activity {
                     }
                 });
             }
+            mFile.delete();
             Log.d(TAG, "uploadFile: upload success");
         } catch (FileNotFoundException e) {
             e.printStackTrace();

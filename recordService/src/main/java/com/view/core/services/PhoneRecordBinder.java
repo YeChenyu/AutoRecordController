@@ -13,6 +13,7 @@ import android.os.Message;
 import android.os.RemoteException;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.view.core.aidl.OnPhoneRecordListener;
@@ -23,9 +24,9 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * @author: yechenyu
+ * @author:  xxx
  * @create: 2019/12/31 下午11:21
- * @email: Yecynull@163.com
+ * @email:  xxx.xxx.xxx
  * @version:
  * @descripe:
  **/
@@ -86,15 +87,35 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
         return false;
     }
 
+    public void startRecord(){
+        try {
+            mediaRecorder = new MediaRecorder();
+            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);   //获得声音数据源
+            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);   // 按3gp格式输出
+            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+            mediaRecorder.setOutputFile(file.getAbsolutePath());   //输出文件
+            mediaRecorder.prepare();    //准备
+            mediaRecorder.start();
+            mListener.onRecordStart();
+        }catch (IOException e){
+            e.printStackTrace();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void stopRecord() throws RemoteException {
+        Log.d(TAG, "stopRecord: executed");
         if(mediaRecorder != null) {
             mediaRecorder.stop();
             mediaRecorder.release();
             mediaRecorder = null;
+            mContext.unregisterReceiver(myPhoneStateReceiver);
+            mListener.onRecordSuccess(file.getAbsolutePath());
+            mListener.onPhoneIdel();
         }
         mRecordSeconds = 0;
-        mContext.unregisterReceiver(myPhoneStateReceiver);
     }
 
     @Override
@@ -175,15 +196,15 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
                         break;
                     //接通电话
                     case TelephonyManager.CALL_STATE_OFFHOOK:
-                        mediaRecorder = new MediaRecorder();
-                        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);   //获得声音数据源
-                        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);   // 按3gp格式输出
-                        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
-                        mediaRecorder.setOutputFile(file.getAbsolutePath());   //输出文件
-                        mediaRecorder.prepare();    //准备
-                        mediaRecorder.start();
-                        mListener.onRecordStart();
-                        mHandler.sendEmptyMessageDelayed(MSG_TYPE_COUNT_DOWN,1000);
+//                        mediaRecorder = new MediaRecorder();
+//                        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);   //获得声音数据源
+//                        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);   // 按3gp格式输出
+//                        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+//                        mediaRecorder.setOutputFile(file.getAbsolutePath());   //输出文件
+//                        mediaRecorder.prepare();    //准备
+//                        mediaRecorder.start();
+//                        mListener.onRecordStart();
+//                        mHandler.sendEmptyMessageDelayed(MSG_TYPE_COUNT_DOWN,1000);
                         break;
                     //挂掉电话
                     case TelephonyManager.CALL_STATE_IDLE:
@@ -200,10 +221,6 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
             } catch (IllegalStateException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-
             } catch (RemoteException e) {
                 e.printStackTrace();
             }

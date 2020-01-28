@@ -1,9 +1,9 @@
 package com.view.core.thread;
 
 /**
- * @author: yechenyu
+ * @author:  xxx
  * @create: 2020/1/5 上午9:25
- * @email: Yecynull@163.com
+ * @email:  xxx.xxx.xxx
  * @version:
  * @descripe:
  **/

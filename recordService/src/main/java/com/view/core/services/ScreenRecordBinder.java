@@ -25,9 +25,9 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * @author: yechenyu
+ * @author:  xxx
  * @create: 2019/12/30 下午11:32
- * @email: Yecynull@163.com
+ * @email:  xxx.xxx.xxx
  * @version:
  * @descripe:
  **/
@@ -125,8 +125,8 @@ public class ScreenRecordBinder extends ScreenRecord.Stub implements Handler.Cal
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         mMediaRecorder.setOutputFile( mRecordFilePath );
         mMediaRecorder.setVideoSize(mRecordWidth, mRecordHeight);
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.MPEG_4_SP);
+        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
         mMediaRecorder.setVideoEncodingBitRate((int) (mRecordWidth * mRecordHeight * 3.6));
         mMediaRecorder.setVideoFrameRate(20);
 

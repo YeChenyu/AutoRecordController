@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -19,9 +20,9 @@ import com.view.core.thread.OnClientListener;
 import com.view.core.utils.LocationUtil;
 
 /**
- * @author: yechenyu
+ * @author:  xxx
  * @create: 2019/12/25 下午8:53
- * @email: Yecynull@163.com
+ * @email:  xxx.xxx.xxx
  * @version:
  * @descripe:
  **/
@@ -32,7 +33,7 @@ public class MyApplication extends Application {
     private Context mContext ;
     private Handler mHandler = new Handler();
     private ClientThread mClientThread = null;
-    private ServiceConnection mPhoneServiceConnection;
+    private PhoneRecordActivity.PhoneServiceConnection mPhoneServiceConnection;
     private ServiceConnection mScreenServiceConnection;
 
     @Override
@@ -60,7 +61,7 @@ public class MyApplication extends Application {
         return mClientThread;
     }
 
-    public void setPhoneServiceConnection(ServiceConnection connection){
+    public void setPhoneServiceConnection(PhoneRecordActivity.PhoneServiceConnection connection){
         mPhoneServiceConnection = connection;
     }
 
@@ -68,7 +69,7 @@ public class MyApplication extends Application {
         mScreenServiceConnection = connection;
     }
 
-    public ServiceConnection getPhoneServiceConnection(){
+    public PhoneRecordActivity.PhoneServiceConnection getPhoneServiceConnection(){
         return mPhoneServiceConnection;
     }
 
@@ -140,13 +141,17 @@ public class MyApplication extends Application {
             }else if(cmd.equals(Constant.CMD_STOP_REMOTE_PHONE)){
                 if(mPhoneServiceConnection != null){
                     Log.d(TAG, "onCommand: unbindservice");
-//                    unbindService(mPhoneServiceConnection);
+                    try {
+                        mPhoneServiceConnection.record.stopRecord();
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                 }
 
 
 
             /**
-             * 开启录音
+             * 开启录屏
              */
             }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_SCREEN)){
                 Intent intent = new Intent();

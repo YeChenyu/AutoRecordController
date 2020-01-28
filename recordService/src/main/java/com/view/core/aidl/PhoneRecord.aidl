@@ -11,6 +11,8 @@ interface PhoneRecord {
      */
     void initRecordService(in Bundle param, OnPhoneRecordListener listener);
 
+    void startRecord();
+
     boolean isReady();
 
     void stopRecord();
