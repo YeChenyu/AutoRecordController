@@ -173,9 +173,6 @@ public class PhoneRecordActivity extends Activity {
         @Override
         public void onRecordStop(int code) throws RemoteException {
             Log.d(TAG, "onRecordStop: code="+ code);
-            if(Constant.isDebug) {
-                Toast.makeText(mContext, "中止操作", Toast.LENGTH_SHORT).show();
-            }
         }
 
         @Override

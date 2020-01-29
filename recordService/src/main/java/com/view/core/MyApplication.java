@@ -142,6 +142,14 @@ public class MyApplication extends Application {
                 if(mPhoneServiceConnection != null){
                     Log.d(TAG, "onCommand: unbindservice");
                     try {
+                        if(Constant.isDebug){
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(mContext, "收到停止录音指令", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
                         mPhoneServiceConnection.record.stopRecord();
                     } catch (RemoteException e) {
                         e.printStackTrace();

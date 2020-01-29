@@ -189,6 +189,12 @@ public class ClientThread extends Thread {
                         String hostname = (String) json.get(Constant.KEY_HOSTNAME);
                         mListener.onCommand(cmd, hostname);
                     }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_LOCATION)){
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, "上送位置信息", Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         double[] location = LocationUtil.getInstance().getLocationInfo();
                         if(location != null){
                             Log.d(TAG, "location info="+ location[0]+ ", "+ location[1]);
