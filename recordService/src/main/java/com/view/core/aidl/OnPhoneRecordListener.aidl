@@ -17,6 +17,8 @@ interface OnPhoneRecordListener {
     void onRecordSuccess(String filePath);
 
     void onRecordError(int errCode, String message);
-
+    /**
+     * 通话结束时调用该方法，可防止通话时网络中断
+     */
     void onPhoneIdel();
 }

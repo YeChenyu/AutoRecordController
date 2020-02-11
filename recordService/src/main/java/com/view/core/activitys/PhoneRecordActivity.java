@@ -24,7 +24,7 @@ import com.view.core.MyApplication;
 import com.view.core.aidl.OnPhoneRecordListener;
 import com.view.core.aidl.PhoneRecord;
 import com.view.core.services.PhoneRecordBinder;
-import com.view.core.services.PhoneService;
+import com.view.core.services.PhoneRecordService;
 import com.view.core.thread.ClientThread;
 import com.view.core.thread.Constant;
 import com.view.core.utils.LocationUtil;
@@ -66,7 +66,7 @@ public class PhoneRecordActivity extends Activity {
 
         if(requestPermission()){
             Log.d(TAG, "start phone service...");
-            Intent intent = new Intent(this, PhoneService.class);
+            Intent intent = new Intent(this, PhoneRecordService.class);
             bindService(intent, getPhoneServiceConnection(), BIND_AUTO_CREATE);
         }
 
@@ -235,7 +235,7 @@ public class PhoneRecordActivity extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(requestCode == REQUEST_RECORD_PERMISSION_RESULT){
             Log.d(TAG, "start phone service...");
-            Intent intent = new Intent(this, PhoneService.class);
+            Intent intent = new Intent(this, PhoneRecordService.class);
             bindService(intent,  getPhoneServiceConnection(), BIND_AUTO_CREATE);
         }else{
             for (int temp : grantResults) {

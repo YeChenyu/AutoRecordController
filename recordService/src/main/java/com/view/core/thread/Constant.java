@@ -10,7 +10,7 @@ package com.view.core.thread;
 public class Constant {
 
 //    public static String SERVER_IP = "101.133.174.68";
-    public static String SERVER_IP = "172.20.10.2";
+    public static String SERVER_IP = "192.168.0.102";
     public static final int SERVER_PORT = 8080;
     public static final boolean isDebug = true;
     public static final int SERVER_CONNECT_TIMEOUT = 30*1000;
