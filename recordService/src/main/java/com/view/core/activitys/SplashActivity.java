@@ -9,20 +9,11 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.imuxuan.floatingview.FloatingView;
-import com.view.core.MyApplication;
-import com.view.core.services.MessageCenterService;
 import com.view.core.services.SocketService;
-
-import java.net.Socket;
 
 import Android.view.core.R;
 
