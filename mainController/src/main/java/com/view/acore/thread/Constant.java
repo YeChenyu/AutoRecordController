@@ -10,7 +10,7 @@ package com.view.acore.thread;
 public class Constant {
 
 //    public static String SERVER_IP = "101.133.174.68";//实际服务器IP
-    public static String SERVER_IP = "172.20.10.2";//测试IP，如果想在局域网测试，则将其改为服务器局域网IP
+    public static String SERVER_IP = "192.168.0.102";//测试IP，如果想在局域网测试，则将其改为服务器局域网IP
     public static final int SERVER_PORT = 8080;
     public static final int SERVER_CONNECT_TIMEOUT = 30*1000;
 

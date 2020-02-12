@@ -33,30 +33,24 @@ public class MyApplication extends Application {
     private ServiceConnection mScreenServiceConnection;
 
     private Intent mSocketIntent = null;
+    public static String process = null;
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate: executed");
         mContext = this;
-//        PackageManager pm = getPackageManager();
-//        ComponentName component = new ComponentName(getApplicationContext(), MainActivity.class);
-//        pm.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-//                PackageManager.DONT_KILL_APP);
-        String process = getProcessName();
-        Log.d(TAG, "onCreate: process name="+ process);
-        if(process!=null && !process.endsWith("keepLife")) {
-            LocationUtil.getInstance().initLocationManager(this);
 
-            startSocketService();
-        }
+        process = getProcessName();
+        Log.d(TAG, "onCreate: process name="+ process);
+        LocationUtil.getInstance().initLocationManager(mContext);
     }
 
     public static Context getContext(){
         return mContext;
     }
 
-    private void startSocketService(){
+    public void startSocketService(){
         Log.d(TAG, "startSocketService: executed "+ android.os.Process.myPid());
         if(mSocketIntent == null) {
             mSocketIntent = new Intent();

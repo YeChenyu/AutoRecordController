@@ -41,4 +41,5 @@ public class Constant {
 
     public static final String FILE_PHONE = "record_phone.3gp";
     public static final String FILE_SCREEN = "record_screen.mp4";
+
 }

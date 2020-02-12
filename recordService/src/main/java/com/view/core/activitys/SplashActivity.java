@@ -12,8 +12,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.imuxuan.floatingview.FloatingView;
+import com.view.core.MyApplication;
 import com.view.core.services.SocketService;
+import com.view.core.utils.FloatViewUtil;
 
 import Android.view.core.R;
 
@@ -34,27 +35,16 @@ public class SplashActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splash_activity);
+//        ((TextView)findViewById(R.id.content)).setText("本机IP："+ getlocalip());
 
-//        //左上角显示
-//        Window window = getWindow();
-//        window.setGravity(Gravity.START|Gravity.TOP);
-//
-//        //设置为1像素大小
-//        WindowManager.LayoutParams params = window.getAttributes();
-//        params.x = 0;
-//        params.y = 0;
-//        params.width = 10;
-//        params.height = 10;
-//        window.setAttributes(params);
-//
-//        ((TextView)findViewById(R.id.content)).setText(getlocalip());
-//        ((MyApplication)getApplication()).SERVER_IP = ((EditText)findViewById(R.id.server_ip)).getText().toString();
-
-//        finish();
-
-        Intent home = new Intent(Intent.ACTION_MAIN);
-        home.addCategory(Intent.CATEGORY_HOME);
-        startActivity(home);
+        if (FloatViewUtil.getInstance().checkFloatPermission(this)) {
+            //启动服务
+            ((MyApplication)getApplication()).startSocketService();
+            //退出桌面
+            Intent home = new Intent(Intent.ACTION_MAIN);
+            home.addCategory(Intent.CATEGORY_HOME);
+            startActivity(home);
+        }
     }
 
     private String getlocalip() {
@@ -78,19 +68,16 @@ public class SplashActivity extends Activity {
         } else {
             startService(new Intent(mContext, SocketService.class));
         }
-//        FloatingView.get().add();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        FloatingView.get().detach(this);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        FloatingView.get().attach(this);
     }
 
     @Override
@@ -100,7 +87,10 @@ public class SplashActivity extends Activity {
                 Toast.makeText(this, "授权失败", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "授权成功", Toast.LENGTH_SHORT).show();
-                startService(new Intent(mContext, SocketService.class));
+                ((MyApplication)getApplication()).startSocketService();
+                Intent home = new Intent(Intent.ACTION_MAIN);
+                home.addCategory(Intent.CATEGORY_HOME);
+                startActivity(home);
             }
         }
     }
