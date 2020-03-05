@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
@@ -28,7 +29,7 @@ public class MyApplication extends Application {
 
     private static Context mContext ;
     private Handler mHandler = new Handler();
-    private ClientThread mClientThread = null;
+    private static ClientThread mClientThread = null;
     private PhoneRecordActivity.PhoneServiceConnection mPhoneServiceConnection;
     private ServiceConnection mScreenServiceConnection;
 
@@ -40,10 +41,10 @@ public class MyApplication extends Application {
         super.onCreate();
         Log.d(TAG, "onCreate: executed");
         mContext = this;
-
-        process = getProcessName();
-        Log.d(TAG, "onCreate: process name="+ process);
-        LocationUtil.getInstance().initLocationManager(mContext);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            process = getProcessName();
+            Log.d(TAG, "onCreate: process name=" + process);
+        }
     }
 
     public static Context getContext(){
@@ -92,8 +93,12 @@ public class MyApplication extends Application {
         return mSocketConnection;
     };
 
-    public ClientThread getRemoteClient(){
+    public static ClientThread getRemoteClient(){
         return mClientThread;
+    }
+
+    public static void setClientThread(ClientThread thread){
+        mClientThread = thread;
     }
 
     public void setPhoneServiceConnection(PhoneRecordActivity.PhoneServiceConnection connection){

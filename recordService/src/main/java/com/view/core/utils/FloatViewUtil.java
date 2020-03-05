@@ -37,7 +37,8 @@ public class FloatViewUtil {
     }
 
     public void showFloatingWindow(Context context) {
-        if (Settings.canDrawOverlays(context)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                && Settings.canDrawOverlays(context)) {
             // 获取WindowManager服务
             WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 
@@ -68,7 +69,8 @@ public class FloatViewUtil {
     }
 
     public boolean checkFloatPermission(Activity activity){
-        if (!Settings.canDrawOverlays(activity)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                && !Settings.canDrawOverlays(activity)) {
             Toast.makeText(activity, "当前无权限，请授权", Toast.LENGTH_SHORT);
             activity.startActivityForResult(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     Uri.parse("package:" + activity.getPackageName())), 0);

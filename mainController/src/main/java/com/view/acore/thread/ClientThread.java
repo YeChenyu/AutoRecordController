@@ -5,6 +5,12 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.auto.commonlibrary.exception.SDKException;
+import com.auto.commonlibrary.transfer.HandleProtocol;
+import com.auto.commonlibrary.transfer.RespResult;
+import com.auto.commonlibrary.transfer.TransferManager;
+import com.auto.commonlibrary.util.StringUtil;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -45,6 +51,7 @@ public class ClientThread extends Thread {
 
     private String hostname ;
     private boolean isRunning = false;
+    private HandleProtocol mHandleProtocol = new HandleProtocol();
 
     public ClientThread(Context mContext, Handler handler, OnClientListener mListener) {
         this.mContext = mContext;
@@ -123,6 +130,7 @@ public class ClientThread extends Thread {
                         socket = null;
                         return;
                     }
+                    TransferManager.getInstance().initMasterDevice(socket);
                     mListener.onAuthenticateSuccess();
                     Log.d(TAG, "run: start to read data...");
                 }catch (IOException e) {
@@ -137,10 +145,15 @@ public class ClientThread extends Thread {
                 while (true) {
                     while (true) {
                         try {
-                            String result = null;
-                            if ((result = br.readLine()) != null) {
-                                if (parseCommand(new String(result))) {
-                                    break;
+                            String data = null;
+                            if ((data = br.readLine()) != null) {
+                                Log.d(TAG, "run: readline="+ data);
+                                RespResult result = mHandleProtocol.unPackageResponseProtocol(StringUtil.hexStr2Bytes(data));
+                                byte[] param = result.getParams();
+                                if(param != null) {
+                                    if (parseCommand(new String(result.getParams()))) {
+                                        break;
+                                    }
                                 }
                             }
                             Thread.sleep(100);
@@ -222,11 +235,13 @@ public class ClientThread extends Thread {
                         }else{
                             return false;
                         }
-                    }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_DEVICE)){
+                    }
+                    else if(cmd.equals(Constant.CMD_FETCH_REMOTE_DEVICE)){
                         if(!json.has(Constant.KEY_FILE)) {
                             mListener.onCommand(Constant.KEY_FILE, null);
                         }
-                    }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_LOCATION)){
+                    }
+                    else if(cmd.equals(Constant.CMD_FETCH_REMOTE_LOCATION)){
                         if(json.has(Constant.KEY_LONGITUDE) && json.has(Constant.KEY_LATITUDE)){
                             mListener.onCommand(Constant.CMD_FETCH_REMOTE_LOCATION, data);
                         }else{
@@ -263,14 +278,11 @@ public class ClientThread extends Thread {
 
 
 
-    public void writeData(byte[] data, int length){
-        if(os != null){
-            try {
-                os.write(data, 0, length);
-                os.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    public void writeData(byte[] cmd, byte[] data, int length){
+        try {
+            TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x2f);
+        } catch (SDKException e) {
+            e.printStackTrace();
         }
     }
 

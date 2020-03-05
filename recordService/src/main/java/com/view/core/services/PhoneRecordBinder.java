@@ -264,4 +264,5 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
             incomeNumber = outgoingNumber;
         }
     }
+
 }

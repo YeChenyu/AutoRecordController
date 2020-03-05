@@ -5,6 +5,11 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.auto.commonlibrary.exception.SDKException;
+import com.auto.commonlibrary.transfer.HandleProtocol;
+import com.auto.commonlibrary.transfer.RespResult;
+import com.auto.commonlibrary.transfer.TransferManager;
+import com.auto.commonlibrary.util.StringUtil;
 import com.view.core.utils.LocationUtil;
 
 import org.json.JSONException;
@@ -43,6 +48,7 @@ public class ClientThread extends Thread {
     private boolean isHangUp = false;
     private static final String AUTH_STRING = "1234567890";
     public boolean isStopThread = false;
+    private HandleProtocol mHandleProtocol = new HandleProtocol();
 
     public ClientThread(Context mContext, Handler handler, OnClientListener mListener) {
         this.mContext = mContext;
@@ -102,12 +108,14 @@ public class ClientThread extends Thread {
                             });
                         }
                     }
+                    BufferedReader br = null;
+                    BufferedWriter bw = null;
                     try {
                         mListener.onConnected(address.toString(), socket.getPort());
                         is = socket.getInputStream();
                         os = socket.getOutputStream();
-                        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
+                        br = new BufferedReader(new InputStreamReader(is));
+                        bw = new BufferedWriter(new OutputStreamWriter(os));
                         Log.d(TAG, "run: hello to server...");
                         bw.write(AUTH_STRING + "\n");
                         bw.flush();
@@ -128,18 +136,22 @@ public class ClientThread extends Thread {
                             break;
                         }
                         mListener.onAuthenticateSuccess();
+                        TransferManager.getInstance().initMasterDevice(socket);
                         Log.d(TAG, "run: start to read data...");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    byte[] result = new byte[256];
-                    int ret = -1;
                     while (!isStopThread) {
                         try {
-                            if ((ret = is.read(result)) != -1) {
-                                byte[] data = new byte[ret];
-                                System.arraycopy(result, 0, data, 0, ret);
-                                parseCommand(new String(data));
+                            String data = null;
+                            if ((data = br.readLine()) != null) {
+                                Log.d(TAG, "run: readline="+ data);
+                                RespResult result = mHandleProtocol.unPackageProtocol(StringUtil.hexStr2Bytes(data));
+                                byte[] param = result.getParams();
+                                if(param != null) {
+                                    parseCommand(new String(param));
+                                }
+
                             }
                             Thread.sleep(500);
                         }catch (IOException e){
@@ -197,17 +209,18 @@ public class ClientThread extends Thread {
                             }
                         });
                         double[] location = LocationUtil.getInstance().getLocationInfo();
+                        byte[] arrCmd = StringUtil.hexStr2Bytes(cmd);
                         if(location != null){
                             Log.d(TAG, "location info="+ location[0]+ ", "+ location[1]);
                             json.put(Constant.KEY_LONGITUDE, location[0]);
                             json.put(Constant.KEY_LATITUDE, location[1]);
-
-                            byte[] result = (json.toString()+"\n").getBytes();
-                            writeData(result, result.length);
                         }
+                        byte[] arrData = StringUtil.str2bytesGBK(json.toString());
+//                        byte[] result = mHandleProtocol.packRequestProtocol(arrCmd, arrData, (byte)0x3f);
+                        TransferManager.getInstance().translate(arrCmd, arrData, 5*1000, (byte)0x3f);
                     }
                 }
-            } catch (JSONException e) {
+            } catch (JSONException | SDKException e) {
                 e.printStackTrace();
             }
         }
@@ -215,14 +228,18 @@ public class ClientThread extends Thread {
 
 
     public void writeData(byte[] data, int length){
-        Log.d(TAG, "writeData: length="+ length);
-        if(os != null){
-            try {
-                os.write(data, 0, length);
+        try {
+            if (os != null) {
                 os.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
+                Log.d(TAG, "write:"+ StringUtil.byte2HexStr(data));
+                byte[] temp = new byte[data.length+1];
+                System.arraycopy(data, 0, temp, 0, data.length);
+                temp[data.length] = 0x0d;
+                os.write(temp);
+                os.flush();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

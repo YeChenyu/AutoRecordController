@@ -22,6 +22,10 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.auto.commonlibrary.exception.SDKException;
+import com.auto.commonlibrary.transfer.RespResult;
+import com.auto.commonlibrary.transfer.TransferManager;
+import com.auto.commonlibrary.util.StringUtil;
 import com.view.acore.thread.ClientThread;
 import com.view.acore.thread.Constant;
 import com.view.acore.thread.OnClientListener;
@@ -264,7 +268,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                 JSONObject json = new JSONObject();
                 try {
                     json.put(Constant.KEY_CMD, Constant.CMD_SEARCH_REMOTE_LIST);
-                    byte[] data = (json.toString()+ "\n").getBytes();
+                    byte[] data = json.toString().getBytes();
                     if(mClientThread == null){
                         mHandler.post(new Runnable() {
                             @Override
@@ -274,8 +278,12 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-                    mClientThread.writeData(data, data.length);
+                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_SEARCH_REMOTE_LIST);
+//                    mClientThread.writeData(cmd, data, data.length);
+                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
                 } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (SDKException e) {
                     e.printStackTrace();
                 }
             }
@@ -293,7 +301,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     json.put(Constant.KEY_CMD, Constant.CMD_FETCH_REMOTE_DEVICE);
                     String hostname = mIp.getText().toString().trim();
                     json.put(Constant.KEY_HOSTNAME, hostname);
-                    byte[] data = (json.toString()+ "\n").getBytes();
+                    byte[] data = (json.toString()).getBytes();
                     if(mClientThread == null){
                         mHandler.post(new Runnable() {
                             @Override
@@ -303,8 +311,12 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-                    mClientThread.writeData(data, data.length);
+//                    mClientThread.writeData(data, data.length);
+                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_FETCH_REMOTE_DEVICE);
+                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
                 } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (SDKException e) {
                     e.printStackTrace();
                 }
             }
@@ -322,7 +334,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     json.put(Constant.KEY_CMD, Constant.CMD_FETCH_REMOTE_PHONE);
                     String hostname = mIp.getText().toString().trim();
                     json.put(Constant.KEY_HOSTNAME, hostname);
-                    byte[] data = (json.toString()+ "\n").getBytes();
+                    byte[] data = (json.toString()).getBytes();
                     if(mClientThread == null){
                         mHandler.post(new Runnable() {
                             @Override
@@ -332,14 +344,17 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-                    mClientThread.writeData(data, data.length);
+//                    mClientThread.writeData(data, data.length);
+                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_FETCH_REMOTE_PHONE);
+                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
                 } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (SDKException e) {
                     e.printStackTrace();
                 }
             }
         }).start();
     }
-
 
     public void onStopRemotePhone(View v){
         if(isDoubleClick()) return;
@@ -352,7 +367,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     json.put(Constant.KEY_CMD, Constant.CMD_STOP_REMOTE_PHONE);
                     String hostname = mIp.getText().toString().trim();
                     json.put(Constant.KEY_HOSTNAME, hostname);
-                    byte[] data = (json.toString()+ "\n").getBytes();
+                    byte[] data = (json.toString()).getBytes();
                     if(mClientThread == null){
                         mHandler.post(new Runnable() {
                             @Override
@@ -362,8 +377,12 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-                    mClientThread.writeData(data, data.length);
+//                    mClientThread.writeData(data, data.length);
+                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_STOP_REMOTE_PHONE);
+                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
                 } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (SDKException e) {
                     e.printStackTrace();
                 }
             }
@@ -381,7 +400,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     json.put(Constant.KEY_CMD, Constant.CMD_FETCH_REMOTE_SCREEN);
                     String hostname = mIp.getText().toString().trim();
                     json.put(Constant.KEY_HOSTNAME, hostname);
-                    byte[] data = (json.toString()+ "\n").getBytes();
+                    byte[] data = (json.toString()).getBytes();
                     if(mClientThread == null){
                         mHandler.post(new Runnable() {
                             @Override
@@ -391,8 +410,12 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-                    mClientThread.writeData(data, data.length);
+//                    mClientThread.writeData(data, data.length);
+                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_FETCH_REMOTE_SCREEN);
+                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
                 } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (SDKException e) {
                     e.printStackTrace();
                 }
             }
@@ -410,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     json.put(Constant.KEY_CMD, Constant.CMD_STOP_REMOTE_SCREEN);
                     String hostname = mIp.getText().toString().trim();
                     json.put(Constant.KEY_HOSTNAME, hostname);
-                    byte[] data = (json.toString()+ "\n").getBytes();
+                    byte[] data = (json.toString()).getBytes();
                     if(mClientThread == null){
                         mHandler.post(new Runnable() {
                             @Override
@@ -420,8 +443,12 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-                    mClientThread.writeData(data, data.length);
+//                    mClientThread.writeData(data, data.length);
+                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_STOP_REMOTE_SCREEN);
+                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
                 } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (SDKException e) {
                     e.printStackTrace();
                 }
             }
@@ -439,7 +466,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     json.put(Constant.KEY_CMD, Constant.CMD_FETCH_REMOTE_LOCATION);
                     String hostname = mIp.getText().toString().trim();
                     json.put(Constant.KEY_HOSTNAME, hostname);
-                    byte[] data = (json.toString()+ "\n").getBytes();
+                    byte[] data = (json.toString()).getBytes();
                     if(mClientThread == null){
                         mHandler.post(new Runnable() {
                             @Override
@@ -449,8 +476,13 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-                    mClientThread.writeData(data, data.length);
+                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_FETCH_REMOTE_LOCATION);
+                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
+//                    Log.d(TAG, "translate: "+ (result!=null ? result.toString() : "null"));
+//                    mClientThread.writeData(data, data.length);
                 } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (SDKException e) {
                     e.printStackTrace();
                 }
             }
@@ -465,8 +497,8 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
             mThread = null;
         }
         if(mClientThread != null){
-            mThread.interrupt();
-            mThread = null;
+            mClientThread.interrupt();
+            mClientThread = null;
         }
     }
 

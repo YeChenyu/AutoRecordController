@@ -25,6 +25,9 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.auto.commonlibrary.exception.SDKException;
+import com.auto.commonlibrary.transfer.TransferManager;
+import com.auto.commonlibrary.util.StringUtil;
 import com.view.core.MyApplication;
 import com.view.core.aidl.OnPhoneRecordListener;
 import com.view.core.aidl.PhoneRecord;
@@ -79,6 +82,9 @@ public class PhoneRecordActivity extends Activity {
 //        ((TextView)findViewById(R.id.content)).setText(getlocalip());
 
         FloatViewUtil.getInstance().showFloatingWindow(mContext);
+        Intent home = new Intent(Intent.ACTION_MAIN);
+        home.addCategory(Intent.CATEGORY_HOME);
+        startActivity(home);
     }
 
     public PhoneServiceConnection getPhoneServiceConnection(){
@@ -267,9 +273,13 @@ public class PhoneRecordActivity extends Activity {
             json.put(Constant.KEY_LENGTH, mFile.length());
         }
 
-        String temp = json.toString()+ "\n";
-        byte[] data = temp.getBytes();
-        ((MyApplication)getApplication()).getRemoteClient().writeData(data, data.length);
+        byte[] arrData = json.toString().getBytes();
+        byte[] arrCmd = StringUtil.hexStr2Bytes(Constant.CMD_RETURN_REMOTE_DEVICE);
+        try {
+            TransferManager.getInstance().translate(arrCmd, arrData, 5*1000, (byte)0x3f);
+        } catch (SDKException e) {
+            e.printStackTrace();
+        }
 
         try {
             FileInputStream fis = new FileInputStream(mFile);
