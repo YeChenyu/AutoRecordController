@@ -18,9 +18,7 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -43,8 +41,6 @@ public class ClientThread extends Thread {
     private OnClientListener mListener;
 
     private Socket socket;
-    private InputStream is;
-    private OutputStream os;
     private boolean isHangUp = false;
     private static final String AUTH_STRING = "1234567890";
     public boolean isStopThread = false;
@@ -112,10 +108,8 @@ public class ClientThread extends Thread {
                     BufferedWriter bw = null;
                     try {
                         mListener.onConnected(address.toString(), socket.getPort());
-                        is = socket.getInputStream();
-                        os = socket.getOutputStream();
-                        br = new BufferedReader(new InputStreamReader(is));
-                        bw = new BufferedWriter(new OutputStreamWriter(os));
+                        br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                         Log.d(TAG, "run: hello to server...");
                         bw.write(AUTH_STRING + "\n");
                         bw.flush();
@@ -125,8 +119,6 @@ public class ClientThread extends Thread {
                         if (auth == null || !auth.equals(AUTH_STRING)) {
                             Log.d(TAG, "run: auth failed!");
                             mListener.onAuthenticateFailed();
-                            if (is != null) is.close();
-                            if (os != null) os.close();
                             if (br != null) br.close();
                             br = null;
                             if (bw != null) bw.close();
@@ -169,12 +161,6 @@ public class ClientThread extends Thread {
                     }
                 }
             }
-            try {
-                if (is != null) is.close();
-                if (os != null) os.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -216,30 +202,12 @@ public class ClientThread extends Thread {
                             json.put(Constant.KEY_LATITUDE, location[1]);
                         }
                         byte[] arrData = StringUtil.str2bytesGBK(json.toString());
-//                        byte[] result = mHandleProtocol.packRequestProtocol(arrCmd, arrData, (byte)0x3f);
-                        TransferManager.getInstance().translate(arrCmd, arrData, 5*1000, (byte)0x3f);
+                        TransferManager.getInstance().translate(cmd, arrData, null);
                     }
                 }
             } catch (JSONException | SDKException e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-
-    public void writeData(byte[] data, int length){
-        try {
-            if (os != null) {
-                os.flush();
-                Log.d(TAG, "write:"+ StringUtil.byte2HexStr(data));
-                byte[] temp = new byte[data.length+1];
-                System.arraycopy(data, 0, temp, 0, data.length);
-                temp[data.length] = 0x0d;
-                os.write(temp);
-                os.flush();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }

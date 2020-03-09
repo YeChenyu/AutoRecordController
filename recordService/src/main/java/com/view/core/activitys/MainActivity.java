@@ -21,6 +21,8 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.auto.commonlibrary.exception.SDKException;
+import com.auto.commonlibrary.transfer.TransferManager;
 import com.view.core.MyApplication;
 import com.view.core.aidl.OnPhoneRecordListener;
 import com.view.core.aidl.OnScreenRecordListener;
@@ -338,21 +340,26 @@ public class MainActivity extends Activity {
             json.put(Constant.KEY_LENGTH, mFile.length());
         }
 
-        String temp = json.toString()+ "\n";
-        byte[] data = temp.getBytes();
-        ((MyApplication)getApplication()).getRemoteClient().writeData(data, data.length);
+        byte[] arrData = json.toString().getBytes();
+        try {
+            TransferManager.getInstance().translate(Constant.CMD_RETURN_REMOTE_DEVICE, arrData, null);
+        } catch (SDKException e) {
+            e.printStackTrace();
+        }
 
         try {
             FileInputStream fis = new FileInputStream(mFile);
                 int ret = -1;
                 byte[] result = new byte[1024];
                 while ((ret = fis.read(result)) != -1) {
-                    ((MyApplication)getApplication()).getRemoteClient().writeData(result, ret);
+                    TransferManager.getInstance().writeData(result);
                 }
             Log.d(TAG, "uploadFile: upload success");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SDKException e) {
             e.printStackTrace();
         }
     }

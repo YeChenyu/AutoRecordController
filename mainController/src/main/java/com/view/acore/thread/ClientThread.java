@@ -1,15 +1,12 @@
 package com.view.acore.thread;
 
 import android.content.Context;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.auto.commonlibrary.exception.SDKException;
 import com.auto.commonlibrary.transfer.HandleProtocol;
-import com.auto.commonlibrary.transfer.RespResult;
 import com.auto.commonlibrary.transfer.TransferManager;
-import com.auto.commonlibrary.util.StringUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,9 +17,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -45,11 +40,9 @@ public class ClientThread extends Thread {
     private OnClientListener mListener;
 
     private Socket socket;
-    private InputStream is;
-    private OutputStream os;
     private static final String AUTH_STRING = "1234567890";
 
-    private String hostname ;
+    private String mClientHostname ;
     private boolean isRunning = false;
     private HandleProtocol mHandleProtocol = new HandleProtocol();
 
@@ -104,15 +97,13 @@ public class ClientThread extends Thread {
                 }
                 SocketAddress local = socket.getLocalSocketAddress();
                 if(local != null){
-                    hostname = local.toString();
+                    mClientHostname = local.toString();
                 }
                 BufferedReader br = null;
                 try {
                     mListener.onConnected(address.toString(), socket.getPort());
-                    is = socket.getInputStream();
-                    os = socket.getOutputStream();
-                    br = new BufferedReader(new InputStreamReader(is));
-                    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
+                    br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                     Log.d(TAG, "run: hello to server...");
                     bw.write(AUTH_STRING + "\n");
                     bw.flush();
@@ -122,8 +113,6 @@ public class ClientThread extends Thread {
                     if (auth == null || !auth.equals(AUTH_STRING)) {
                         Log.d(TAG, "run: auth failed!");
                         mListener.onAuthenticateFailed();
-                        if (is != null) is.close(); is = null;
-                        if (os != null) os.close(); os = null;
                         if(br != null) br.close(); br = null;
                         if(bw != null) bw.close(); bw = null;
                         if(socket != null) socket.close();
@@ -143,58 +132,30 @@ public class ClientThread extends Thread {
                     }
                 }
                 while (true) {
-                    while (true) {
-                        try {
-                            String data = null;
-                            if ((data = br.readLine()) != null) {
-                                Log.d(TAG, "run: readline="+ data);
-                                RespResult result = mHandleProtocol.unPackageResponseProtocol(StringUtil.hexStr2Bytes(data));
-                                byte[] param = result.getParams();
-                                if(param != null) {
-                                    if (parseCommand(new String(result.getParams()))) {
-                                        break;
-                                    }
-                                }
-                            }
-                            Thread.sleep(100);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
 
                     try {
-                        byte[] result = new byte[1024];
-                        int ret = -1, length = 0;
-                        while ((ret = is.read(result)) != -1) {
-                            byte[] data = new byte[ret];
-                            System.arraycopy(result, 0, data, 0, ret);
-                            length += ret;
-                            if(fileBw != null){
-                                fileBw.write(data);
-                                fileBw.flush();
+                        String data = TransferManager.getInstance().readLine();
+                        Log.d(TAG, "run: read jsonData="+ data);
+                        if (data != null) {
+                            if (parseCommand(data)) {
+                                byte[] result;
+                                int length = 0;
+                                while ((result = TransferManager.getInstance().read()) != null) {
+                                    length += result.length;
+                                    if(fileBw != null){
+                                        fileBw.write(result);
+                                        fileBw.flush();
+                                    }
+                                    if(length >= fileLength)
+                                        break;
+                                    Thread.sleep(100);
+                                }
                             }
-                            if(length >= fileLength)
-                                break;
-                            Thread.sleep(100);
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
+                    }catch (Exception e){
                         e.printStackTrace();
                     }
                 }
-            }
-            try {
-                if (is != null)
-                    is.close();
-                is = null;
-                if(os != null)
-                    os.close();
-                os = null;
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }
@@ -262,8 +223,13 @@ public class ClientThread extends Thread {
 
     private FileOutputStream fileBw;
     private FileOutputStream createFile(String fileName){
-        File file = new File("/mnt/sdcard/"+ fileName.replace(".", "_"+ System.currentTimeMillis()+ "."));
+        File root = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
+                + "/AutoController"+ mClientHostname);
         try {
+            if(!root.exists()){
+                root.mkdirs();
+            }
+            File file = new File(root.getAbsolutePath()+ "/"+ fileName);
             if (!file.exists())
                 file.createNewFile();
             return new FileOutputStream(file);
@@ -275,18 +241,7 @@ public class ClientThread extends Thread {
         return null;
     }
 
-
-
-
-    public void writeData(byte[] cmd, byte[] data, int length){
-        try {
-            TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x2f);
-        } catch (SDKException e) {
-            e.printStackTrace();
-        }
-    }
-
     public String getHostName(){
-        return hostname==null ? "unknown" : hostname;
+        return mClientHostname==null ? "unknown" : mClientHostname;
     }
 }

@@ -1,6 +1,5 @@
 package com.view.acore.activitys;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -8,7 +7,6 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.content.FileProvider;
@@ -23,9 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.auto.commonlibrary.exception.SDKException;
-import com.auto.commonlibrary.transfer.RespResult;
 import com.auto.commonlibrary.transfer.TransferManager;
-import com.auto.commonlibrary.util.StringUtil;
 import com.view.acore.thread.ClientThread;
 import com.view.acore.thread.Constant;
 import com.view.acore.thread.OnClientListener;
@@ -278,9 +274,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_SEARCH_REMOTE_LIST);
-//                    mClientThread.writeData(cmd, data, data.length);
-                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
+                    TransferManager.getInstance().translate(Constant.CMD_SEARCH_REMOTE_LIST, data, null);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 } catch (SDKException e) {
@@ -311,9 +305,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-//                    mClientThread.writeData(data, data.length);
-                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_FETCH_REMOTE_DEVICE);
-                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
+                    TransferManager.getInstance().translate(Constant.CMD_FETCH_REMOTE_DEVICE, data, null);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 } catch (SDKException e) {
@@ -344,9 +336,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-//                    mClientThread.writeData(data, data.length);
-                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_FETCH_REMOTE_PHONE);
-                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
+                    TransferManager.getInstance().translate(Constant.CMD_FETCH_REMOTE_PHONE, data, null);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 } catch (SDKException e) {
@@ -377,9 +367,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-//                    mClientThread.writeData(data, data.length);
-                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_STOP_REMOTE_PHONE);
-                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
+                    TransferManager.getInstance().translate(Constant.CMD_STOP_REMOTE_PHONE, data, null);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 } catch (SDKException e) {
@@ -410,9 +398,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-//                    mClientThread.writeData(data, data.length);
-                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_FETCH_REMOTE_SCREEN);
-                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
+                    TransferManager.getInstance().translate(Constant.CMD_FETCH_REMOTE_SCREEN, data, null);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 } catch (SDKException e) {
@@ -443,9 +429,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-//                    mClientThread.writeData(data, data.length);
-                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_STOP_REMOTE_SCREEN);
-                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
+                    TransferManager.getInstance().translate(Constant.CMD_STOP_REMOTE_SCREEN, data, null);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 } catch (SDKException e) {
@@ -476,10 +460,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         });
                         return ;
                     }
-                    byte[] cmd = StringUtil.hexStr2Bytes(Constant.CMD_FETCH_REMOTE_LOCATION);
-                    RespResult result = TransferManager.getInstance().translate(cmd, data, 5*1000, (byte)0x3f);
-//                    Log.d(TAG, "translate: "+ (result!=null ? result.toString() : "null"));
-//                    mClientThread.writeData(data, data.length);
+                    TransferManager.getInstance().translate(Constant.CMD_FETCH_REMOTE_LOCATION, data, null);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 } catch (SDKException e) {

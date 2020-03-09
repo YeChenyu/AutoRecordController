@@ -57,8 +57,8 @@ public class RespResult {
 
     @Override
     public String toString() {
-        return "RespResult [execute_id=" + executeId + ", cmdCode=" + cmdCode + ", cmdType=" + cmdType + ", params="
-                + StringUtil.byte2HexStr(params) + "]";
+        return "RespResult [execute_id=" + executeId + ", cmdCode=" + cmdCode + ", respCode=" + respCode +
+                ", cmdType=" + cmdType + ", params="+ StringUtil.byte2HexStr(params) + "]";
     }
 
 }

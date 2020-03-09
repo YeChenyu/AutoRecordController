@@ -30,5 +30,11 @@ public abstract class TransferManager {
 
     public abstract boolean destoryDevice();
 
-    public abstract RespResult translate(byte[] cmd, byte[] params, int timeout, byte type) throws SDKException;
+    public abstract boolean translate(String cmd, byte[] params, byte[] respCode) throws SDKException;
+
+    public abstract boolean writeData(byte[] data) throws SDKException;
+
+    public abstract byte[] read() throws SDKException;
+
+    public abstract String readLine() throws SDKException;
 }

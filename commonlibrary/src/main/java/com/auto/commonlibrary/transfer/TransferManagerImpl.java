@@ -5,13 +5,11 @@ import android.util.Log;
 import com.auto.commonlibrary.exception.SDKException;
 import com.auto.commonlibrary.util.StringUtil;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 
@@ -26,7 +24,8 @@ public class TransferManagerImpl extends TransferManager {
     private boolean isLogined = false;
 
     private Socket mSocket = null;
-    private InputStream mInputStream;
+    private InputStream is;
+    private BufferedReader mInputStream;
     private BufferedWriter mOutputStream;
     private HandleProtocol handleProtocol = new HandleProtocol();
 //    private Logger LOG = Logger.getLogger(TransferManager.class);
@@ -64,7 +63,8 @@ public class TransferManagerImpl extends TransferManager {
 //                LOG.error("the connection is unactive");
                 return false;
             }
-            mInputStream = socket.getInputStream();
+            is = socket.getInputStream();
+            mInputStream = new BufferedReader(new InputStreamReader(is));
             mOutputStream = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             return true;
         } catch (IOException e) {
@@ -75,6 +75,7 @@ public class TransferManagerImpl extends TransferManager {
 
     @Override
     public boolean destoryDevice() {
+
         return false;
     }
 
@@ -83,146 +84,118 @@ public class TransferManagerImpl extends TransferManager {
      *
      * @param cmd     指令号
      * @param params  参数
-     * @param timeout 超时时间，单位:ms
+     * @param respCode 响应码
      * @return
      * @throws SDKException
      */
     @Override
-    public synchronized RespResult translate(byte[] cmd, byte[] params, int timeout, byte type) throws SDKException {
-//        LOG.trace("translate executed");
+    public synchronized boolean translate(String cmd, byte[] params, byte[] respCode) throws SDKException {
+        Log.d(TAG, "translate executed");
         if(!login()){
             throw new SDKException(SDKException.COMMUNICATE_ERROR_IO_ERROR);
         }
         // 封装请求报文
-        byte[] requestData = handleProtocol.packRequestProtocol(cmd, params, type);
+        byte[] arrCmd = StringUtil.hexStr2Bytes(cmd);
+        byte[] requestData = null;
+        if(respCode == null){
+            requestData = handleProtocol.packRequestProtocol(arrCmd, params);
+        }else{
+            requestData = handleProtocol.packResponseProtocol(arrCmd, params, respCode);
+        }
         try {
             write(requestData);
-//            RespResult result = readData(cmd, timeout);
-//            int ret = result.getExecuteId();
-//            if (ret == 0) {
-                return null;
-//            } else if (ret == -1) {
-//                throw new SDKException(SDKException.COMMUNICATE_ERROR_BACK_CMD_ERROR);
-//            } else if (ret == -2) {
-//                throw new SDKException(SDKException.COMMUNICATE_ERROR_LRC_ERROR);
-//            } else {
-//                throw new SDKException(SDKException.COMMUNICATE_ERROR_OTHER);
-//            }
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
             throw new SDKException(SDKException.COMMUNICATE_ERROR_IO_ERROR);
         }
     }
 
+    @Override
+    public boolean writeData(byte[] data) throws SDKException {
+        if (mOutputStream != null) {
+            try {
+                mOutputStream.flush();
+                Log.d(TAG, "write:" + StringUtil.byte2HexStr(data));
+                mOutputStream.write(StringUtil.byte2HexStr(data));
+                mOutputStream.flush();
+                return true;
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public byte[] read() throws SDKException {
+        if(is == null){
+            Log.e(TAG, "readLine: please execute initMasterDevice first");
+            return null;
+        }
+        try {
+            byte[] data = new byte[1024];
+            int ret = is.read(data);
+            if(ret > 0){
+                byte[] result = new byte[ret];
+                System.arraycopy(data, 0, result, 0, ret);
+                return result;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public String readLine() throws SDKException {
+        if(mInputStream == null){
+            Log.e(TAG, "readLine: please execute initMasterDevice first");
+            return null;
+        }
+        while (true) {
+            try {
+                String data = null;
+                if ((data = mInputStream.readLine()) != null) {
+                    Log.d(TAG, "readLine: read="+ data);
+                    RespResult result = handleProtocol.unPackageProtocol(StringUtil.hexStr2Bytes(data));
+                    Log.d(TAG, "readLine: reault="+ result.toString());
+                    if(result.getExecuteId() == 0){
+                        String respCode = result.getRespCode();
+                        byte cmdType = result.getCmdType();
+                        if(cmdType==0x2f && respCode.length()==2){
+                            if(respCode.equals("00")){
+                                byte[] param = result.getParams();
+                                if(param != null){
+                                    return new String(param);
+                                }
+                            }
+                        }else{
+                            byte[] param = result.getParams();
+                            if(param != null){
+                                return new String(param);
+                            }
+                        }
+                    }
+                    return null;
+                }
+                Thread.sleep(100);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+    }
+
     private void write(byte[] data) throws IOException {
-//        if (mInputStream != null) {
-//            while (mInputStream.available() > 0)
-//                mInputStream.read();
-//        }
         if (mOutputStream != null) {
             mOutputStream.flush();
-//            byte[] temp = new byte[data.length+1];
-//            System.arraycopy(data, 0, temp, 0, data.length);
-//            temp[data.length] = 0x0d;
             Log.d(TAG, "write:"+ StringUtil.byte2HexStr(data));
             mOutputStream.write(StringUtil.byte2HexStr(data)+ "\n");
             mOutputStream.flush();
-        }
-    }
-
-
-
-    private RespResult readData(byte[] cmd, int timeout) throws SDKException, IOException {
-        // 取STX
-//        byte[] STXBuff = new byte[128];
-        byte[] STXBuff = new byte[]{(byte) 0x33};
-        int stxRet = read(STXBuff, STXBuff.length, timeout < OVERTIME ? OVERTIME : timeout);
-//        Log.d(TAG, "readData: "+ StringUtil.byte2HexStr(STXBuff));
-        if (stxRet != 0) {
-            if (stxRet == 2) {
-                isLogined = false;//K21挂掉时，设置为需要重新登录
-                throw new SDKException(SDKException.COMMUNICATE_ERROR_TIMEOUT);
-            }
-            if (stxRet == 4) {
-                throw new SDKException(SDKException.COMMUNICATE_ERROR_IO_ERROR);
-            }
-            if (stxRet == 3) {
-                throw new SDKException(SDKException.COMMUNICATE_ERROR_STOP);
-            }
-        }
-        if (STXBuff[0] != 0x02) {
-            Log.d(TAG,"stx 首字节读到0, 进行第二次读取...");
-            stxRet =  read(STXBuff, STXBuff.length, OVERTIME);
-            if (stxRet != 0) {
-                if (stxRet == 2) {
-                    isLogined = false;//K21挂掉时，设置为需要重新登录
-                    throw new SDKException(SDKException.COMMUNICATE_ERROR_TIMEOUT);
-                }
-                if (stxRet == 4) {
-                    throw new SDKException(SDKException.COMMUNICATE_ERROR_IO_ERROR);
-                }
-                if (stxRet == 3) {
-                    throw new SDKException(SDKException.COMMUNICATE_ERROR_STOP);
-                }
-            }
-        }
-
-        if (STXBuff[0] == 0x02) {
-            byte[] dataLenBuff = new byte[2];
-            int dataLenRet = read(dataLenBuff, dataLenBuff.length, 2 * 1000);
-            if (dataLenRet != 0) {
-                throw new SDKException(SDKException.COMMUNICATE_ERROR_TIMEOUT);
-            }
-            int dataLen = Integer.valueOf(StringUtil.byte2HexStr(dataLenBuff));
-            byte[] dataBuff = new byte[dataLen + 2];
-            int dataRet = read(dataBuff, dataBuff.length, 2 * 1000);
-            if (dataRet != 0) {
-                throw new SDKException(SDKException.COMMUNICATE_ERROR_TIMEOUT);
-            }
-
-            if (dataBuff[dataBuff.length - 2] == 0x03) {
-                RespResult result = handleProtocol.unPackageProtocol(dataBuff, cmd);
-                return result;
-            } else {
-                throw new SDKException(SDKException.COMMUNICATE_ERROR_ETX_ERROR);
-            }
-        } else {
-            throw new SDKException(SDKException.COMMUNICATE_ERROR_STX_ERROR);
-        }
-    }
-
-    public int read(byte recvBuf[], int recvLen, long waitTime) throws IOException {
-        long lBeginTime = System.currentTimeMillis();// 更新当前秒计数
-        long lCurrentTime = 0;
-        int nRet = 0;
-        int nReadedSize = 0;
-        if (mInputStream == null) {
-            return 4;
-        }
-        while (true) {
-
-            if (mInputStream.available() > 0) {
-//                BufferedReader br = new BufferedReader(new InputStreamReader(mInputStream));
-//                String str = br.readLine();
-//                Log.d(TAG, "readLine: data="+ StringUtil.str2HexStr(str));
-                nRet = mInputStream.read(recvBuf, nReadedSize, (recvLen - nReadedSize));
-                Log.d(TAG, "read:"+ StringUtil.byte2HexStr(recvBuf));
-                if (nRet > 0) {
-                    nReadedSize += nRet;
-                    if (recvLen == nReadedSize) {
-                        return 0;
-                    }
-                }
-            }
-            try {
-                Thread.sleep(SLEEP_TIME);
-                lCurrentTime = System.currentTimeMillis();
-                if ((lCurrentTime - lBeginTime) > waitTime) {
-                    return 2;
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
 

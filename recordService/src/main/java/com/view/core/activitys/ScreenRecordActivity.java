@@ -5,24 +5,16 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.PixelFormat;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.auto.commonlibrary.exception.SDKException;
 import com.auto.commonlibrary.transfer.TransferManager;
-import com.auto.commonlibrary.util.StringUtil;
 import com.view.core.MyApplication;
 import com.view.core.services.ScreenRecordService;
 import com.view.core.services.ScreenUtil;
@@ -39,8 +31,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-
-import Android.view.core.R;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import static android.support.v4.content.PermissionChecker.PERMISSION_DENIED;
 
@@ -163,6 +155,7 @@ public class ScreenRecordActivity extends Activity {
         }
     };
 
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-hhmm");
     private void uploadFile(String filePath, String fileType) throws JSONException {
         Log.d(TAG, "uploadFile: path="+ filePath+ ", type="+ fileType);
         File mFile = null;
@@ -171,14 +164,14 @@ public class ScreenRecordActivity extends Activity {
         json.put(Constant.KEY_HOSTNAME, remoteHost);
         if(filePath != null){
             mFile = new File(filePath);
-            json.put(Constant.KEY_FILE, mFile.getName());
+            String name = mFile.getName();
+            json.put(Constant.KEY_FILE, name.replace(".", "-"+ sdf.format(new Date())+ "."));
             json.put(Constant.KEY_LENGTH, mFile.length());
         }
 
         byte[] arrData = json.toString().getBytes();
-        byte[] arrCmd = StringUtil.hexStr2Bytes(Constant.CMD_RETURN_REMOTE_DEVICE);
         try {
-            TransferManager.getInstance().translate(arrCmd, arrData, 5*1000, (byte)0x3f);
+            TransferManager.getInstance().translate(Constant.CMD_RETURN_REMOTE_DEVICE, arrData, null);
         } catch (SDKException e) {
             e.printStackTrace();
         }
@@ -188,7 +181,7 @@ public class ScreenRecordActivity extends Activity {
             int ret = -1;
             byte[] result = new byte[1024];
             while ((ret = fis.read(result)) != -1) {
-                ((MyApplication)getApplication()).getRemoteClient().writeData(result, ret);
+                TransferManager.getInstance().writeData(result);
             }
             Log.d(TAG, "uploadFile: upload success");
             if(Constant.isDebug) {
@@ -203,6 +196,8 @@ public class ScreenRecordActivity extends Activity {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SDKException e) {
             e.printStackTrace();
         }
     }

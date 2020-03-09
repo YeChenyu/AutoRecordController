@@ -33,7 +33,7 @@ public class HandleProtocol {
 	 * @param params
 	 * @return
 	 */
-	public byte[] packRequestProtocol(byte[] cmd, byte[] params, byte type) {
+	public byte[] packRequestProtocol(byte[] cmd, byte[] params) {
 
 		int len = 9;// 参数除外的字节数
 		int paramLen = 0;// 参数的字节数
@@ -55,7 +55,7 @@ public class HandleProtocol {
 		requestData[pos++] = cmd[1];
 		requestData[pos++] = cmd[2];
 		// DATA
-		requestData[pos++] = type;
+		requestData[pos++] = 0x3f;
 		if (paramLen > 0) {
 			System.arraycopy(params, 0, requestData, pos, paramLen);
 			pos += paramLen;
@@ -72,7 +72,7 @@ public class HandleProtocol {
 	}
 
 	/**
-	 * 组装报文： STX、PKGLEN、CMD、2F、DATA、ETX、LRC
+	 * 组装响应报文： STX、PKGLEN、CMD、2F、RESP、DATA、ETX、LRC
 	 *
 	 * @param cmd
 	 * @param params
@@ -122,7 +122,7 @@ public class HandleProtocol {
 	}
 	
 	/**
-	 * 解析报文
+	 * 解析请求报文
 	 *
 	 * @param src
 	 * @return
@@ -151,7 +151,7 @@ public class HandleProtocol {
 		pos += 3;
 		// 比对指令  00191000002F7B22484F53544E414D45223A22227D03
 		String cmd = StringUtil.byte2HexStr(src_cmd);
-		System.out.println("cmdStr ="+ cmd );
+		Log.d(TAG, "cmdStr ="+ cmd );
 		respResult.setCmdCode(cmd);
 
 		byte cmdType = src[3];// 指示位, 0x2F, 请求/响应报文指示 ， 0x3F，为终端主动发送的报文
@@ -170,14 +170,14 @@ public class HandleProtocol {
 		}
 		pos++;// ETX
 		byte lrc = src[pos];
-		System.out.println("lrc:"+ (byte)lrc);
+		Log.d(TAG, "lrc:"+ (byte)lrc);
 
 		String dataLenStr = String.format(Locale.US,"%04d", src.length-5);
 		byte[] dataLen = BCDDecode.str2Bcd(dataLenStr);
 
 		byte[] lrcData = new byte[src.length-2];
 		System.arraycopy(src, 1, lrcData, 0, src.length - 2);
-		System.out.println("lrcData:"+ StringUtil.byte2HexStr(lrcData));
+		Log.d(TAG, "lrcData:"+ StringUtil.byte2HexStr(lrcData));
 		byte calLrc = LrcUtil.lrc_check(lrcData);// LRC
 		if (lrc != calLrc) {
 			respResult.setExecuteId(EXECUTE_ID_LRC_ERROR);
@@ -189,7 +189,7 @@ public class HandleProtocol {
 	}
 
 	/**
-	 * 解析报文
+	 * 解析响应报文
 	 *
 	 * @param src
 	 * @return
@@ -219,7 +219,7 @@ public class HandleProtocol {
 		pos += 3;
 		// 比对指令
 		String cmdStr = StringUtil.byte2HexStr(src_cmd);
-		System.out.println("cmd ="+cmdStr);
+		Log.d(TAG, "cmd ="+cmdStr);
 
 		byte dir_cmd = src[pos];// 指示位, 0x2F, 请求/响应报文指示 ， 0x3F，为终端主动发送的报文
 		pos++;// 指示位
@@ -243,7 +243,7 @@ public class HandleProtocol {
 		}
 		pos++;// ETX
 		byte lrc = src[pos];
-		System.out.println("lrc:"+lrc);
+		Log.d(TAG, "lrc:"+lrc);
 
 		String dataLenStr = String.format(Locale.US,"%04d", src.length - 2);
 		byte[] dataLen = BCDDecode.str2Bcd(dataLenStr);
@@ -292,7 +292,7 @@ public class HandleProtocol {
 		pos += 3;
 		// 比对指令
 		String cmdStr = StringUtil.byte2HexStr(src_cmd);
-		System.out.println("cmd ="+ cmdStr);
+		Log.d(TAG, "cmd ="+ cmdStr);
 		respResult.setCmdCode(cmdStr);
 
 		byte dir_cmd = src[pos];// 指示位, 0x2F, 请求/响应报文指示 ， 0x3F，为终端主动发送的报文
@@ -319,22 +319,14 @@ public class HandleProtocol {
 		}
 		pos++;// ETX
 		byte lrc = src[pos];
-		System.out.println("lrc:"+lrc);
+		Log.d(TAG, "lrc:"+lrc);
 
 		String dataLenStr = String.format(Locale.US,"%04d", src.length - 2);
 		byte[] dataLen = BCDDecode.str2Bcd(dataLenStr);
 
-		byte[] lrcData = null;
-		if ((byte) 0x2F == dir_cmd) {
-			lrcData = new byte[src.length + 1];
-			System.arraycopy(dataLen, 0, lrcData, 0, 2);
-			System.arraycopy(src, 0, lrcData, 2, src.length - 1);
-			System.out.println("lrcData:"+ StringUtil.byte2HexStr(lrcData));
-		}else{
-			lrcData = new byte[src.length-2];
-			System.arraycopy(src, 1, lrcData, 0, src.length - 2);
-			System.out.println("lrcData:"+ StringUtil.byte2HexStr(lrcData));
-		}
+		byte[] lrcData = new byte[src.length-2];
+		System.arraycopy(src, 1, lrcData, 0, src.length - 2);
+		Log.d(TAG, "lrcData:"+ StringUtil.byte2HexStr(lrcData));
 		byte calLrc = LrcUtil.lrc_check(lrcData);// LRC
 		if (lrc != calLrc) {
 			respResult.setExecuteId(EXECUTE_ID_LRC_ERROR);
@@ -345,68 +337,6 @@ public class HandleProtocol {
 		return respResult;
 	}
 
-	/**
-	 * 解析报文
-	 *
-	 * @param src
-	 * @param cmd
-	 * @return
-	 */
-	public RespResult unPackageProtocol(byte[] src, byte[] cmd) {
-
-		RespResult respResult = new RespResult();
-		int pos = 0;
-
-		byte[] src_cmd = new byte[3];
-		System.arraycopy(src, pos, src_cmd, 0, src_cmd.length);
-		pos += 3;
-		// 比对指令
-		String cmdStr = StringUtil.byte2HexStr(cmd);
-		String srccmdStr = StringUtil.byte2HexStr(src_cmd);
-		System.out.println("cmdStr ="+cmdStr +" srccmdStr="+srccmdStr);
-		if (!cmdStr.equalsIgnoreCase(srccmdStr)) {
-			respResult.setExecuteId(EXECUTE_ID_CMD_ERROR);
-			return respResult;
-		}
-		byte dir_cmd = src[3];// 指示位, 0x2F, 请求/响应报文指示 ， 0x3F，为终端主动发送的报文
-		pos++;// 指示位
-		if ((byte) 0x2F == dir_cmd) {
-			byte[] src_response = new byte[2];
-			System.arraycopy(src, pos, src_response, 0, 2);
-			pos += 2;
-			// 响应码
-			respResult.setCmdCode(StringUtil.hexStr2Str(StringUtil.byte2HexStr(src_response)));
-		}
-
-		int paramLen = src.length - pos - 2;
-		if (paramLen > 0) {
-			byte[] params = new byte[paramLen];
-			System.arraycopy(src, pos, params, 0, paramLen);
-			pos += paramLen;
-			respResult.setParams(params);
-			logRecv(src_cmd, src, respResult.getCmdCode());
-		} else {
-			logRecv(src_cmd, null, respResult.getCmdCode());
-		}
-		pos++;// ETX
-		byte lrc = src[pos];
-		System.out.println("lrc:"+lrc);
-
-		String dataLenStr = String.format(Locale.US,"%04d", src.length - 2);
-		byte[] dataLen = BCDDecode.str2Bcd(dataLenStr);
-
-		byte[] lrcData = new byte[src.length + 2];
-		System.arraycopy(dataLen, 0, lrcData, 0, 2);
-		System.arraycopy(src, 0, lrcData, 2, src.length - 1);
-		byte calLrc = LrcUtil.lrc_check(lrcData);// LRC
-		if (lrc != calLrc) {
-			respResult.setExecuteId(EXECUTE_ID_LRC_ERROR);
-		} else {
-			respResult.setExecuteId(EXECUTE_ID_SUCCESS);
-		}
-
-		return respResult;
-	}
 	private void logSend(byte[] cmd, byte[] params) {
 		StringBuilder send = new StringBuilder();
 //		send.append("==============发送 Start===============\n");
@@ -420,7 +350,7 @@ public class HandleProtocol {
 		}
 		send.append("发送 >>> 内容:[" + StringUtil.byte2HexStr(params) + "]\n\n");
 //		send.append("==============发送 End===============\n");
-		System.out.println(send.toString());
+		Log.d(TAG, send.toString());
 //		LOG.debug(send.toString());
 	}
 
@@ -436,23 +366,25 @@ public class HandleProtocol {
 		}
 		recv.append("接收 <<< 响应码:["+respCode+"] 内容:[" + StringUtil.byte2HexStr(params) + "]\n\n");
 //		recv.append("==============接收 End===============\n");
-		System.out.println(recv.toString());
+		Log.d(TAG, recv.toString());
 //		LOG.debug(recv.toString());
 	}
 
-	public static final String[] CMD_SearchRemoteList =  new String[] { "C101", "获取远程设备列表" };
-	public static final String[] CMD_FetchRemoteDevice = new String[] { "C102", "获取远程设备信息" };
-	public static final String[] CMD_FetchRemotePhone =  new String[] { "C104", "远程录音" };
-	public static final String[] CMD_StopRemotePhone =   new String[] { "C105", "停止远程录音" };
-	public static final String[] CMD_FetchRemoteScreen = new String[] { "C106", "远程录屏" };
-	public static final String[] CMD_StopRemoteScreen  = new String[] { "C107", "停止录屏" };
-	public static final String[] CMD_FetchRemoteLocation = new String[] { "C108", "获取远程位置信息" };
-	public static final String[] CMD_TransferData = new String[] { "C109", "转发远程数据" };
-	public static final String[] CMD_xxx = new String[] { "C10A", "xxx" };
+	public static final String[] CMD_SearchRemoteList =  new String[] { "100000", "获取远程设备列表" };
+	public static final String[] CMD_FetchRemoteDevice = new String[] { "100001", "获取远程设备信息" };
+	public static final String[] CMD_ReturnRemoteDevice = new String[] { "100002", "返回远程设备信息" };
+	public static final String[] CMD_FetchRemotePhone =  new String[] { "100003", "远程录音" };
+	public static final String[] CMD_StopRemotePhone =   new String[] { "100004", "停止远程录音" };
+	public static final String[] CMD_FetchRemoteScreen = new String[] { "100005", "远程录屏" };
+	public static final String[] CMD_StopRemoteScreen  = new String[] { "100006", "停止录屏" };
+	public static final String[] CMD_FetchRemoteLocation = new String[] { "1000009", "获取远程位置信息" };
+	public static final String[] CMD_TransferData = new String[] { "100008", "转发远程数据" };
+	public static final String[] CMD_xxx = new String[] { "1000xx", "xxx" };
 
 	public final static String[][] ALL_CMD = {
-			CMD_SearchRemoteList, CMD_FetchRemoteDevice, CMD_FetchRemotePhone,
-			CMD_StopRemotePhone, CMD_FetchRemoteScreen, CMD_StopRemoteScreen,
+			CMD_SearchRemoteList, CMD_FetchRemoteDevice, CMD_ReturnRemoteDevice,
+			CMD_FetchRemotePhone, CMD_StopRemotePhone, 
+			CMD_FetchRemoteScreen, CMD_StopRemoteScreen,
 			CMD_FetchRemoteLocation, CMD_TransferData, CMD_xxx
 	};
 
