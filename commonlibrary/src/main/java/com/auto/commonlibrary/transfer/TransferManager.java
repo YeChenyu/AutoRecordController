@@ -7,9 +7,9 @@ import com.auto.commonlibrary.exception.SDKException;
 import java.net.Socket;
 
 /**
- * @author: yechenyu
+ * @author: xxx
  * @create: 2020-02-18 00:09
- * @email: Yecynull@163.com
+ * @email: xxxx.xxxx.xxxx
  * @version:
  * @descripe:
  **/

@@ -15,9 +15,9 @@ import com.view.core.MyApplication;
 import Android.view.core.R;
 
 /**
- * @author: yechenyu
+ * @author: xxx
  * @create: 2020/2/4 下午11:11
- * @email: Yecynull@163.com
+ * @email: xxxx.xxxx.xxxx
  * @version:
  * @descripe:
  **/

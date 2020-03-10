@@ -10,9 +10,9 @@ import com.view.core.MyApplication;
 import com.view.core.services.SocketService;
 
 /**
- * @author: yechenyu
+ * @author: xxx
  * @create: 2020/1/30 下午9:47
- * @email: Yecynull@163.com
+ * @email: xxx.xxx.xxx
  * @version:
  * @descripe:
  **/
