@@ -214,6 +214,9 @@ public class ScreenRecordActivity extends Activity {
         } else {
             Toast.makeText(this,"拒绝录屏", Toast.LENGTH_SHORT).show();
         }
+        Intent home = new Intent(Intent.ACTION_MAIN);
+        home.addCategory(Intent.CATEGORY_HOME);
+        startActivity(home);
     }
 
 }
