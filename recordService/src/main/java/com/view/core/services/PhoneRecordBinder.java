@@ -53,6 +53,7 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
     private int mRecordSeconds = 0;
     private int mTimeOut = -1;
     private boolean isReady = false;
+    private boolean isRegisterPhoneState = false;
 
     public PhoneRecordBinder(Context context){
         mContext = context;
@@ -68,7 +69,10 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
         intentFilter.addAction(OUTGOING_ACTION);
         myPhoneStateReceiver = new MyPhoneStateReceiver();
         // 动态注册去电广播接收器
-        context.registerReceiver(myPhoneStateReceiver, intentFilter);
+        if(!isRegisterPhoneState) {
+            context.registerReceiver(myPhoneStateReceiver, intentFilter);
+            isRegisterPhoneState = true;
+        }
 
         Toast.makeText(context,"开启", Toast.LENGTH_LONG).show();
     }
@@ -132,7 +136,10 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
             mediaRecorder = null;
             mListener.onRecordSuccess(file.getAbsolutePath());
             mListener.onPhoneIdel();
-            mContext.unregisterReceiver(myPhoneStateReceiver);
+            if(isRegisterPhoneState) {
+                mContext.unregisterReceiver(myPhoneStateReceiver);
+                isRegisterPhoneState = false;
+            }
         }
     }
 
@@ -167,7 +174,10 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
                             mRecordSeconds = 0;
                             mListener.onRecordSuccess(file.getAbsolutePath());
                             mListener.onPhoneIdel();//若为通话状态，则网络请求在此回调执行
-                            mContext.unregisterReceiver(myPhoneStateReceiver);
+                            if(isRegisterPhoneState) {
+                                mContext.unregisterReceiver(myPhoneStateReceiver);
+                                isRegisterPhoneState = false;
+                            }
                         }
                     } catch (RemoteException e) {
                         e.printStackTrace();
@@ -197,7 +207,10 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
                                 mediaRecorder = null;
                                 mListener.onRecordSuccess(file.getAbsolutePath());
                                 mListener.onPhoneIdel();//若为通话状态，则网络请求在此回调执行
-                                mContext.unregisterReceiver(myPhoneStateReceiver);
+                                if(isRegisterPhoneState) {
+                                    mContext.unregisterReceiver(myPhoneStateReceiver);
+                                    isRegisterPhoneState = false;
+                                }
                             }
                         } catch (RemoteException e) {
                             e.printStackTrace();
@@ -242,7 +255,10 @@ public class PhoneRecordBinder extends PhoneRecord.Stub implements Handler.Callb
                             mediaRecorder = null;
                             mListener.onRecordSuccess(file.getAbsolutePath());
                             mListener.onPhoneIdel();
-                            mContext.unregisterReceiver(myPhoneStateReceiver);
+                            if(isRegisterPhoneState) {
+                                mContext.unregisterReceiver(myPhoneStateReceiver);
+                                isRegisterPhoneState = false;
+                            }
                         }
                         break;
                 }

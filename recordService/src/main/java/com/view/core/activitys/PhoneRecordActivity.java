@@ -56,6 +56,7 @@ public class PhoneRecordActivity extends Activity {
     private String remoteHost;
 
     private Handler mHandler = new Handler();
+    private boolean isBindService = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +71,7 @@ public class PhoneRecordActivity extends Activity {
             Log.d(TAG, "start phone service...");
             Intent intent = new Intent(this, PhoneRecordService.class);
             bindService(intent, getPhoneServiceConnection(), BIND_AUTO_CREATE);
+            isBindService = true;
         }
 
 //        ((TextView)findViewById(R.id.content)).setText(getlocalip());
@@ -222,7 +224,11 @@ public class PhoneRecordActivity extends Activity {
                 }
                 uploadFile(mPhoneFile, Constant.TYPE_PHONE);
 
-                unbindService(getPhoneServiceConnection());
+                if(isBindService) {
+                    unbindService(getPhoneServiceConnection());
+                    isBindService = false;
+                }
+                finish();
             } catch (JSONException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
