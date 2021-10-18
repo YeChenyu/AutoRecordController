@@ -7,9 +7,9 @@ import com.auto.commonlibrary.exception.SDKException;
 import java.net.Socket;
 
 /**
- * @author: xxx
+ * @author: yechenyu
  * @create: 2020-02-18 00:09
- * @email: xxxx.xxxx.xxxx
+ * @email: Yecynull@163.com
  * @version:
  * @descripe:
  **/
@@ -32,9 +32,13 @@ public abstract class TransferManager {
 
     public abstract boolean translate(String cmd, byte[] params, byte[] respCode) throws SDKException;
 
-    public abstract boolean writeData(byte[] data) throws SDKException;
+    public abstract boolean writeHexData(byte[] data) throws SDKException;
 
     public abstract byte[] read() throws SDKException;
 
+    public abstract int read(byte[] data, int off, int length) throws SDKException;
+
     public abstract String readLine() throws SDKException;
+
+    public abstract String readDataLine() throws SDKException;
 }

@@ -7,6 +7,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.content.FileProvider;
@@ -15,6 +16,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -53,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     private ScrollView scrollView;
     private TextView mContent;
     private EditText mIp, mPort;
+    private Button btnConnect;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,13 +70,14 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                 mHandler.sendMessage(msg);
             }
         });
-//        mThread.start();
         String IP = getlocalip();
         if(IP == null || IP.equals("0.0.0.0"))
             IP = getLocalIpAddress();
         scrollView = findViewById(R.id.scrollview);
+        btnConnect = findViewById(R.id.btn_connect);
         mContent = ((TextView)findViewById(R.id.content));
         mContent.setText("本机地址："+ IP+ "\r\n");
+//        setTitle("本机地址："+ IP);
 
         mIp = findViewById(R.id.address_ip);
         mPort = findViewById(R.id.address_port);
@@ -115,63 +119,73 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     private static final int CMD_CONNECTION_FAILED = 5;
     private static final int CMD_ERROR = 6;
     public void onConnectServer(View v){
-        if(mClientThread == null) {
-            mClientThread = new ClientThread(mContext, mHandler, new OnClientListener() {
+        if(btnConnect.getText().toString().equals("连接服务器")) {
+            if (mClientThread == null) {
+                mClientThread = new ClientThread(mContext, mHandler, new OnClientListener() {
 
-                @Override
-                public void onStartConnect() {
-                    Message msg = mHandler.obtainMessage(CMD_START_CONNECT);
-                    mHandler.sendMessage(msg);
-                }
-
-                @Override
-                public void onConnected(String host, int port) {
-                    Message msg = mHandler.obtainMessage(CMD_CONNECTED);
-                    msg.obj = host;
-                    msg.arg1 = port;
-                    mHandler.sendMessage(msg);
-                }
-
-                @Override
-                public void onAuthenticateFailed() {
-                    Message msg = mHandler.obtainMessage(CMD_AUTHENTICATE_FAILED);
-                    mHandler.sendMessage(msg);
-                }
-
-                @Override
-                public void onAuthenticateSuccess() {
-                    Message msg = mHandler.obtainMessage(CMD_AUTHENTICATE_SUCCESS);
-                    mHandler.sendMessage(msg);
-                }
-
-                @Override
-                public void onCommand(String cmd, String json) {
-                    Message msg = mHandler.obtainMessage(CMD_COMMAND);
-                    msg.arg1 = 0;
-                    if(cmd.equals(Constant.KEY_LIST)){
-                        msg.arg1 = 1;
-                    }else if(cmd.equals(Constant.KEY_FILE)){
-                        msg.arg1 = 2;
-                    }else if(cmd.equals(Constant.CMD_FETCH_REMOTE_LOCATION)){
-                        msg.arg1 = 3;
+                    @Override
+                    public void onStartConnect() {
+                        Message msg = mHandler.obtainMessage(CMD_START_CONNECT);
+                        mHandler.sendMessage(msg);
                     }
-                    msg.obj = json;
-                    mHandler.sendMessage(msg);
-                }
 
-                @Override
-                public void onConnectionFailed(String message) {
-                    Message msg = mHandler.obtainMessage(CMD_CONNECTION_FAILED);
-                    msg.obj = message;
-                    mHandler.sendMessage(msg);
-                }
+                    @Override
+                    public void onConnected(String host, int port) {
+                        Message msg = mHandler.obtainMessage(CMD_CONNECTED);
+                        msg.obj = host;
+                        msg.arg1 = port;
+                        mHandler.sendMessage(msg);
+                    }
 
-                @Override
-                public void onError(int errCode, String errMessage) {
+                    @Override
+                    public void onAuthenticateFailed() {
+                        Message msg = mHandler.obtainMessage(CMD_AUTHENTICATE_FAILED);
+                        mHandler.sendMessage(msg);
+                    }
 
-                }
-            });
-            mClientThread.start();
+                    @Override
+                    public void onAuthenticateSuccess() {
+                        Message msg = mHandler.obtainMessage(CMD_AUTHENTICATE_SUCCESS);
+                        mHandler.sendMessage(msg);
+                    }
+
+                    @Override
+                    public void onCommand(String cmd, String json) {
+                        Message msg = mHandler.obtainMessage(CMD_COMMAND);
+                        msg.arg1 = 0;
+                        if (cmd.equals(Constant.KEY_LIST)) {
+                            msg.arg1 = 1;
+                        } else if (cmd.equals(Constant.KEY_FILE)) {
+                            msg.arg1 = 2;
+                        } else if (cmd.equals(Constant.CMD_FETCH_REMOTE_LOCATION)) {
+                            msg.arg1 = 3;
+                        }
+                        msg.obj = json;
+                        mHandler.sendMessage(msg);
+                    }
+
+                    @Override
+                    public void onConnectionFailed(String message) {
+                        Message msg = mHandler.obtainMessage(CMD_CONNECTION_FAILED);
+                        msg.obj = message;
+                        mHandler.sendMessage(msg);
+                    }
+
+                    @Override
+                    public void onError(int errCode, String errMessage) {
+
+                    }
+                });
+                mClientThread.start();
+            }
+        }else{
+            if(mClientThread != null){
+                mClientThread.stopClient();
+                mClientThread.interrupt();
+                mClientThread = null;
+            }
+            btnConnect.setText("连接服务器");
+            appendMessageToContent("成功断开服务器，请重新连接！！！！！！！！！");
         }
     }
 
@@ -185,10 +199,12 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                 appendMessageToContent("连接成功！！！！！！！！！");
                 appendMessageToContent("ip: "+ (String)msg.obj+ "");
                 appendMessageToContent("port: "+ msg.arg1+ "");
+                btnConnect.setText("断开服务器");
                 break;
             case CMD_AUTHENTICATE_FAILED:
                 appendMessageToContent("认证失败！");
                 if(mClientThread != null){
+                    mClientThread.stopClient();
                     mClientThread.interrupt();
                     mClientThread = null;
                 }
@@ -248,8 +264,21 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                 break;
             case CMD_CONNECTION_FAILED:
                 appendMessageToContent("连接失败:"+ (String)msg.obj+ "");
+                if(mClientThread != null){
+                    mClientThread.stopClient();
+                    mClientThread.interrupt();
+                    mClientThread = null;
+                }
+                btnConnect.setText("连接服务器");
                 break;
-            default: appendMessageToContent("未知错误...");
+            default:
+                appendMessageToContent("未知错误...");
+                if(mClientThread != null){
+                    mClientThread.stopClient();
+                    mClientThread.interrupt();
+                    mClientThread = null;
+                }
+                btnConnect.setText("连接服务器");
                 break;
         }
         return false;
@@ -279,6 +308,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     e.printStackTrace();
                 } catch (SDKException e) {
                     e.printStackTrace();
+                    handleSDKExecption(e);
                 }
             }
         }).start();
@@ -310,6 +340,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     e.printStackTrace();
                 } catch (SDKException e) {
                     e.printStackTrace();
+                    handleSDKExecption(e);
                 }
             }
         }).start();
@@ -341,6 +372,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     e.printStackTrace();
                 } catch (SDKException e) {
                     e.printStackTrace();
+                    handleSDKExecption(e);
                 }
             }
         }).start();
@@ -372,6 +404,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     e.printStackTrace();
                 } catch (SDKException e) {
                     e.printStackTrace();
+                    handleSDKExecption(e);
                 }
             }
         }).start();
@@ -403,6 +436,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     e.printStackTrace();
                 } catch (SDKException e) {
                     e.printStackTrace();
+                    handleSDKExecption(e);
                 }
             }
         }).start();
@@ -434,6 +468,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     e.printStackTrace();
                 } catch (SDKException e) {
                     e.printStackTrace();
+                    handleSDKExecption(e);
                 }
             }
         }).start();
@@ -465,9 +500,28 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                     e.printStackTrace();
                 } catch (SDKException e) {
                     e.printStackTrace();
+                    handleSDKExecption(e);
                 }
             }
         }).start();
+    }
+
+    private void handleSDKExecption(final SDKException e){
+        if(mClientThread != null){
+            mClientThread.stopClient();
+            mClientThread.interrupt();
+            mClientThread = null;
+        }
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+            String message = "通信异常，请重新连接服务器！！！！！！！！！\r\n"+
+                    e.getMessage();
+            appendMessageToContent(message);
+            btnConnect.setText("连接服务器");
+            Toast.makeText(mContext, message, Toast.LENGTH_SHORT);
+            }
+        });
     }
 
     @Override
@@ -478,6 +532,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
             mThread = null;
         }
         if(mClientThread != null){
+            mClientThread.stopClient();
             mClientThread.interrupt();
             mClientThread = null;
         }
@@ -490,7 +545,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
             public void run() {
                 scrollView.fullScroll(ScrollView.FOCUS_DOWN);
             }
-        }, 300);
+        }, 100);
     }
 
     private long startTime = 0;
@@ -535,15 +590,15 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
         Log.d(TAG, "onPreShowFileExplore: executed");
         if(Build.VERSION.SDK_INT < 25) {
             //获取父目录
-            File file = new File("/mnt/sdcard/"+ Constant.FILE_SCREEN);
+            File file = new File(Constant.LOCAL_STORAGE);
             File parentFlie = new File(file.getParent());
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setDataAndType(Uri.fromFile(parentFlie), "*/*");
+            intent.setDataAndType(Uri.fromFile(file), "*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivity(intent);
         }else{
             //获取到指定文件夹，这里为：/storage/emulated/0/Android/data/你的包	名/files/Download
-            File file = new File("/mnt/sdcard/"+ Constant.FILE_SCREEN);
+            File file = new File(Constant.LOCAL_STORAGE);
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             //7.0以上跳转系统文件需用FileProvider，参考链接：https://blog.csdn.net/growing_tree/article/details/71190741
             Uri uri = FileProvider.getUriForFile(mContext,getPackageName()+ ".FileProvider", file);

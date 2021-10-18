@@ -9,8 +9,8 @@ package com.view.core.thread;
  **/
 public class Constant {
 
-//    public static String SERVER_IP = "101.133.174.68";
-    public static String SERVER_IP = "192.168.0.102";
+        public static String SERVER_IP = "1.15.77.146";//实际服务器IP
+//    public static String SERVER_IP = "192.168.0.101";//测试IP，如果想在局域网测试，则将其改为服务器局域网IP
     public static final int SERVER_PORT = 8080;
     public static final boolean isDebug = true;
     public static final int SERVER_CONNECT_TIMEOUT = 30*1000;

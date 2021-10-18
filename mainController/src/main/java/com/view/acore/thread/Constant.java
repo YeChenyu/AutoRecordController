@@ -1,5 +1,7 @@
 package com.view.acore.thread;
 
+import android.os.Environment;
+
 /**
  * @author: xxx
  * @create: 2020/1/8 下午9:26
@@ -9,8 +11,8 @@ package com.view.acore.thread;
  **/
 public class Constant {
 
-//    public static String SERVER_IP = "101.133.174.68";//实际服务器IP
-    public static String SERVER_IP = "192.168.0.102";//测试IP，如果想在局域网测试，则将其改为服务器局域网IP
+    public static String SERVER_IP = "1.15.77.146";//实际服务器IP
+//    public static String SERVER_IP = "192.168.0.101";//测试IP，如果想在局域网测试，则将其改为服务器局域网IP
     public static final int SERVER_PORT = 8080;
     public static final int SERVER_CONNECT_TIMEOUT = 30*1000;
 
@@ -42,4 +44,7 @@ public class Constant {
 
     public static final String FILE_PHONE = "record_phone.3gp";
     public static final String FILE_SCREEN = "record_screen.mp4";
+
+    public static final String LOCAL_STORAGE = Environment.getExternalStorageDirectory().getAbsolutePath()+ "/AutoController";
+
 }

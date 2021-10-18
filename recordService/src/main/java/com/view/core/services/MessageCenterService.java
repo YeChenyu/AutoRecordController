@@ -15,9 +15,9 @@ import com.view.core.MyApplication;
 import Android.view.core.R;
 
 /**
- * @author: xxx
+ * @author: yechenyu
  * @create: 2020/2/4 下午11:11
- * @email: xxxx.xxxx.xxxx
+ * @email: Yecynull@163.com
  * @version:
  * @descripe:
  **/
@@ -99,7 +99,7 @@ public class MessageCenterService extends Service {
         Notification notification = new Notification.Builder(this)
                 .setChannelId(CHANNEL_ONE_ID)
                 .setTicker("Nature")
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_launcher)
                 .setContentTitle("PID: "+ NOTIFY_ID)
                 .build();
         notification.flags |= Notification.FLAG_NO_CLEAR;

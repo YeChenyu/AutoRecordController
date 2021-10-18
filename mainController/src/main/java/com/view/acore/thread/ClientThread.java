@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.auto.commonlibrary.transfer.HandleProtocol;
 import com.auto.commonlibrary.transfer.TransferManager;
+import com.auto.commonlibrary.util.StringUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -135,20 +136,23 @@ public class ClientThread extends Thread {
 
                     try {
                         String data = TransferManager.getInstance().readLine();
-                        Log.d(TAG, "run: read jsonData="+ data);
+//                        Log.d(TAG, "run: read jsonData="+ data);
                         if (data != null) {
                             if (parseCommand(data)) {
-                                byte[] result;
                                 int length = 0;
-                                while ((result = TransferManager.getInstance().read()) != null) {
+                                String readData = null;
+                                while ((readData = TransferManager.getInstance().readDataLine()) != null) {
+                                    Log.d(TAG, "read "+ readData.length()+ " :"+ readData);
+                                    byte[] result = StringUtil.hexStr2Bytes(readData);
                                     length += result.length;
                                     if(fileBw != null){
                                         fileBw.write(result);
                                         fileBw.flush();
                                     }
-                                    if(length >= fileLength)
+                                    if(length >= fileLength) {
                                         break;
-                                    Thread.sleep(100);
+                                    }
+                                    Thread.sleep(50);
                                 }
                             }
                         }
@@ -223,8 +227,7 @@ public class ClientThread extends Thread {
 
     private FileOutputStream fileBw;
     private FileOutputStream createFile(String fileName){
-        File root = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
-                + "/AutoController"+ mClientHostname);
+        File root = new File(Constant.LOCAL_STORAGE+ mClientHostname);
         try {
             if(!root.exists()){
                 root.mkdirs();
@@ -243,5 +246,9 @@ public class ClientThread extends Thread {
 
     public String getHostName(){
         return mClientHostname==null ? "unknown" : mClientHostname;
+    }
+
+    public void stopClient(){
+        this.isRunning = false;
     }
 }

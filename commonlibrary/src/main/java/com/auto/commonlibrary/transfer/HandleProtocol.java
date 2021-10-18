@@ -370,26 +370,13 @@ public class HandleProtocol {
 //		LOG.debug(recv.toString());
 	}
 
-//	public static final String CMD_SEARCH_REMOTE_LIST   = "100000";
-//	public static final String CMD_FETCH_REMOTE_DEVICE  = "100001";
-//	public static final String CMD_RETURN_REMOTE_DEVICE  = "100002";
-//	public static final String CMD_STOP_REMOTE_OPERA    = "100003";
-//	public static final String CMD_FETCH_REMOTE_PHONE    = "100004";
-//	public static final String CMD_STOP_REMOTE_PHONE    = "100005";
-//	public static final String CMD_FETCH_REMOTE_SCREEN    = "100006";
-//	public static final String CMD_STOP_REMOTE_SCREEN    = "100007";
-//
-//	public static final String CMD_TRANSFER_REMOTE_DATA    = "100008";
-//	public static final String CMD_FETCH_REMOTE_LOCATION    = "100009";
-
 	public static final String[] CMD_SearchRemoteList =  new String[] { "100000", "获取远程设备列表" };
 	public static final String[] CMD_FetchRemoteDevice = new String[] { "100001", "获取远程设备信息" };
 	public static final String[] CMD_ReturnRemoteDevice = new String[] { "100002", "返回远程设备信息" };
-	public static final String[] CMD_StopRemoteOpera = new String[] { "100003", "返回远程设备信息" };
-	public static final String[] CMD_FetchRemotePhone =  new String[] { "100004", "远程录音" };
-	public static final String[] CMD_StopRemotePhone =   new String[] { "100005", "停止远程录音" };
-	public static final String[] CMD_FetchRemoteScreen = new String[] { "100006", "远程录屏" };
-	public static final String[] CMD_StopRemoteScreen  = new String[] { "100007", "停止录屏" };
+	public static final String[] CMD_FetchRemotePhone =  new String[] { "100003", "远程录音" };
+	public static final String[] CMD_StopRemotePhone =   new String[] { "100004", "停止远程录音" };
+	public static final String[] CMD_FetchRemoteScreen = new String[] { "100005", "远程录屏" };
+	public static final String[] CMD_StopRemoteScreen  = new String[] { "100006", "停止录屏" };
 	public static final String[] CMD_FetchRemoteLocation = new String[] { "1000009", "获取远程位置信息" };
 	public static final String[] CMD_TransferData = new String[] { "100008", "转发远程数据" };
 	public static final String[] CMD_xxx = new String[] { "1000xx", "xxx" };

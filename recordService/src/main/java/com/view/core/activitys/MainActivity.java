@@ -78,7 +78,10 @@ public class MainActivity extends Activity {
         if(requestPermission()){
             Log.d(TAG, "start phone service...");
             Intent intent = new Intent(this, PhoneRecordService.class);
-            bindService(intent, getPhoneServiceConnection(), BIND_AUTO_CREATE);
+            PhoneServiceConnection connection = getPhoneServiceConnection();
+            if(connection != null){
+                bindService(intent, connection, BIND_AUTO_CREATE);
+            }
         }
 
         double[] location = LocationUtil.getInstance().getLocationInfo();
@@ -93,7 +96,6 @@ public class MainActivity extends Activity {
 
     private PhoneServiceConnection getPhoneServiceConnection(){
         PhoneServiceConnection connection = ((MyApplication)getApplication()).getPhoneServiceConnection();
-
         return connection;
     }
 
@@ -352,7 +354,7 @@ public class MainActivity extends Activity {
                 int ret = -1;
                 byte[] result = new byte[1024];
                 while ((ret = fis.read(result)) != -1) {
-                    TransferManager.getInstance().writeData(result);
+                    TransferManager.getInstance().writeHexData(result);
                 }
             Log.d(TAG, "uploadFile: upload success");
         } catch (FileNotFoundException e) {

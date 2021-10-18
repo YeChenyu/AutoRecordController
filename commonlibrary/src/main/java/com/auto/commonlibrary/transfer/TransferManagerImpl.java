@@ -112,12 +112,12 @@ public class TransferManagerImpl extends TransferManager {
     }
 
     @Override
-    public boolean writeData(byte[] data) throws SDKException {
+    public boolean writeHexData(byte[] data) throws SDKException {
         if (mOutputStream != null) {
             try {
                 mOutputStream.flush();
                 Log.d(TAG, "write:" + StringUtil.byte2HexStr(data));
-                mOutputStream.write(StringUtil.byte2HexStr(data));
+                mOutputStream.write(StringUtil.byte2HexStr(data)+ "\n");
                 mOutputStream.flush();
                 return true;
             }catch (IOException e){
@@ -139,12 +139,26 @@ public class TransferManagerImpl extends TransferManager {
             if(ret > 0){
                 byte[] result = new byte[ret];
                 System.arraycopy(data, 0, result, 0, ret);
+                Log.d(TAG, "read "+ ret+ " data ="+ StringUtil.byteToStr(result));
                 return result;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public int read(byte[] data, int off, int length) throws SDKException{
+        if(is == null){
+            Log.e(TAG, "readLine: please execute initMasterDevice first");
+            return -2;
+        }
+        try {
+            return is.read(data, off, length);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return -3;
+        }
     }
 
     @Override
@@ -187,6 +201,19 @@ public class TransferManagerImpl extends TransferManager {
                 e.printStackTrace();
                 return null;
             }
+        }
+    }
+
+    public String readDataLine() throws SDKException{
+        if(mInputStream == null){
+            Log.e(TAG, "readLine: please execute initMasterDevice first");
+            return null;
+        }
+        try {
+            return mInputStream.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

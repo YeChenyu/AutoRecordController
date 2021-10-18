@@ -181,7 +181,7 @@ public class ScreenRecordActivity extends Activity {
             int ret = -1;
             byte[] result = new byte[1024];
             while ((ret = fis.read(result)) != -1) {
-                TransferManager.getInstance().writeData(result);
+                TransferManager.getInstance().writeHexData(result);
             }
             Log.d(TAG, "uploadFile: upload success");
             if(Constant.isDebug) {
@@ -214,9 +214,6 @@ public class ScreenRecordActivity extends Activity {
         } else {
             Toast.makeText(this,"拒绝录屏", Toast.LENGTH_SHORT).show();
         }
-        Intent home = new Intent(Intent.ACTION_MAIN);
-        home.addCategory(Intent.CATEGORY_HOME);
-        startActivity(home);
     }
 
 }

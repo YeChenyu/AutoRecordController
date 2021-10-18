@@ -77,7 +77,7 @@ public class SocketService extends Service {
         Notification notification = new Notification.Builder(this)
                 .setChannelId(CHANNEL_ONE_ID)
                 .setTicker("Nature")
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_launcher)
                 .setContentTitle("SocketService: "+ PID)
                 .build();
         notification.flags |= Notification.FLAG_NO_CLEAR;
@@ -98,6 +98,7 @@ public class SocketService extends Service {
         FloatViewUtil.getInstance().showFloatingWindow(mContext);
         return super.onStartCommand(intent, flags, startId);
     }
+
 
     @Override
     public void onDestroy() {
