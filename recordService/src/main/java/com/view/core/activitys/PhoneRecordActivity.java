@@ -77,9 +77,9 @@ public class PhoneRecordActivity extends Activity {
 //        ((TextView)findViewById(R.id.content)).setText(getlocalip());
 
         FloatViewUtil.getInstance().showFloatingWindow(mContext);
-//        Intent home = new Intent(Intent.ACTION_MAIN);
-//        home.addCategory(Intent.CATEGORY_HOME);
-//        startActivity(home);
+        Intent home = new Intent(Intent.ACTION_MAIN);
+        home.addCategory(Intent.CATEGORY_HOME);
+        startActivity(home);
     }
 
     public PhoneServiceConnection getPhoneServiceConnection(){
@@ -99,7 +99,7 @@ public class PhoneRecordActivity extends Activity {
             Log.d(TAG, "onServiceConnected: the service is binded");
             record = PhoneRecordBinder.asInterface(service);
             Bundle param = new Bundle();
-            param.putString("KEY_RECORD_FILE", "/mnt/sdcard/"+ Constant.FILE_PHONE);
+            param.putString("KEY_RECORD_FILE", "/mnt/sdcard/Download/"+ Constant.FILE_PHONE);
             try {
                 record.initRecordService(param, mPhoneRecordListener);
                 record.startRecord();

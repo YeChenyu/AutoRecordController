@@ -373,16 +373,19 @@ public class HandleProtocol {
 	public static final String[] CMD_SearchRemoteList =  new String[] { "100000", "获取远程设备列表" };
 	public static final String[] CMD_FetchRemoteDevice = new String[] { "100001", "获取远程设备信息" };
 	public static final String[] CMD_ReturnRemoteDevice = new String[] { "100002", "返回远程设备信息" };
-	public static final String[] CMD_FetchRemotePhone =  new String[] { "100003", "远程录音" };
-	public static final String[] CMD_StopRemotePhone =   new String[] { "100004", "停止远程录音" };
-	public static final String[] CMD_FetchRemoteScreen = new String[] { "100005", "远程录屏" };
-	public static final String[] CMD_StopRemoteScreen  = new String[] { "100006", "停止录屏" };
-	public static final String[] CMD_FetchRemoteLocation = new String[] { "1000009", "获取远程位置信息" };
+	public static final String[] CMD_StopRemoteOpera =  new String[] { "100003", "停止远程操作" };
+	public static final String[] CMD_FetchRemotePhone =  new String[] { "100004", "远程录音" };
+	public static final String[] CMD_StopRemotePhone =   new String[] { "100005", "停止远程录音" };
+	public static final String[] CMD_FetchRemoteScreen = new String[] { "100006", "远程录屏" };
+	public static final String[] CMD_StopRemoteScreen  = new String[] { "100007", "停止录屏" };
+
 	public static final String[] CMD_TransferData = new String[] { "100008", "转发远程数据" };
+	public static final String[] CMD_FetchRemoteLocation = new String[] { "1000009", "获取远程位置信息" };
 	public static final String[] CMD_xxx = new String[] { "1000xx", "xxx" };
 
 	public final static String[][] ALL_CMD = {
 			CMD_SearchRemoteList, CMD_FetchRemoteDevice, CMD_ReturnRemoteDevice,
+			CMD_StopRemoteOpera,
 			CMD_FetchRemotePhone, CMD_StopRemotePhone, 
 			CMD_FetchRemoteScreen, CMD_StopRemoteScreen,
 			CMD_FetchRemoteLocation, CMD_TransferData, CMD_xxx

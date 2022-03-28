@@ -1,13 +1,20 @@
 package com.view.core.activitys;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -16,7 +23,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.view.core.MyApplication;
+import com.view.core.services.SocketAccessibilityService;
 import com.view.core.services.SocketService;
+import com.view.core.thread.ActiveThread;
 import com.view.core.thread.Constant;
 import com.view.core.utils.FloatViewUtil;
 
@@ -36,6 +45,8 @@ public class SplashActivity extends Activity {
     private Context mContext = this;
     private Intent service = null;
 
+    private Button mConnect, mDisconnect;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,6 +54,8 @@ public class SplashActivity extends Activity {
         ((TextView)findViewById(R.id.content)).setText("本机IP："+ getlocalip());
         ((EditText)findViewById(R.id.server_ip)).setText(Constant.SERVER_IP);
 
+        mConnect = findViewById(R.id.connect);
+        mDisconnect = findViewById(R.id.disconnect);
 //        if (FloatViewUtil.getInstance().checkFloatPermission(this)) {
 //            //启动服务
 //            ((MyApplication)getApplication()).startSocketService();
@@ -51,6 +64,7 @@ public class SplashActivity extends Activity {
 //            home.addCategory(Intent.CATEGORY_HOME);
 //            startActivity(home);
 //        }
+
     }
 
     private String getlocalip() {
@@ -75,6 +89,8 @@ public class SplashActivity extends Activity {
             service = new Intent(this, SocketService.class);
             startService(service);
         }
+        mConnect.setEnabled(false);
+
     }
     public void closeClient(View v){
 //        ((MyApplication)getApplication()).SERVER_IP = ((EditText)findViewById(R.id.server_ip)).getText().toString();
@@ -85,6 +101,7 @@ public class SplashActivity extends Activity {
             stopService(service);
             service = null;
         }
+        mConnect.setEnabled(true);
     }
 
     @Override
@@ -111,6 +128,4 @@ public class SplashActivity extends Activity {
             }
         }
     }
-
-
 }

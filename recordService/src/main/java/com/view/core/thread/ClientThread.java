@@ -61,6 +61,7 @@ public class ClientThread extends Thread {
             } catch (SocketException e) {
                 e.printStackTrace();
             }
+            int cnt = 0;
             while (!isStopThread) {
                 if (!isHangUp) {
                     mListener.onStartConnect();
@@ -148,6 +149,29 @@ public class ClientThread extends Thread {
                             Thread.sleep(500);
                         }catch (IOException e){
                             e.printStackTrace();
+                            if(e instanceof SocketException &&
+                                    e.getMessage()!=null && e.getMessage().contains("Software caused connection abort")){
+                                if (socket != null) {
+                                    try {
+                                        socket.close();
+                                    } catch (IOException ioException) {
+                                        ioException.printStackTrace();
+                                    }
+                                }
+                            }
+//                            try {
+//                                // 定时发送心跳包
+//                                if ((++cnt % 2) == 0) {
+//                                    cnt = 0;
+//                                    Thread.sleep(500);
+//                                    JSONObject json = new JSONObject();
+//                                    json.put(Constant.KEY_DATA, "1111");
+//                                    byte[] arrData = StringUtil.str2bytesGBK(json.toString());
+//                                    TransferManager.getInstance().translate(Constant.CMD_HEART_TEST, arrData, null);
+//                                }
+//                            }catch (SDKException | InterruptedException | JSONException e1){
+//                                e.printStackTrace();
+//                            }
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -155,8 +179,14 @@ public class ClientThread extends Thread {
                 }else{
                     try {
                         Thread.sleep(1000);
+                        // 定时发送心跳包
+                        if(( ++cnt % 30 ) == 0) {
+                            cnt = 0;
+                            byte[] arrData = StringUtil.str2bytesGBK("1111");
+                            TransferManager.getInstance().translate(Constant.CMD_HEART_TEST, arrData, null);
+                        }
                         Log.d(TAG, "run: client is hang up...");
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException | SDKException e) {
                         e.printStackTrace();
                     }
                 }
@@ -203,11 +233,28 @@ public class ClientThread extends Thread {
                         }
                         byte[] arrData = StringUtil.str2bytesGBK(json.toString());
                         TransferManager.getInstance().translate(cmd, arrData, null);
+                    }else if(cmd.equals(Constant.CMD_HEART_TEST)){
+                        Log.d(TAG, "CMD_HEART_TEST: "+ data);
                     }
                 }
             } catch (JSONException | SDKException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+
+    public boolean getSocketStatus() {
+        if(socket != null){
+            Log.d(TAG, "getSocketStatus: "+ socket.isClosed() + ", "+ socket.isConnected()+ ", "+ socket.isOutputShutdown());
+            try {
+                socket.sendUrgentData(0xff);
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return false;
     }
 }

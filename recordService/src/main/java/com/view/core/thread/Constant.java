@@ -27,6 +27,7 @@ public class Constant {
     public static final String CMD_TRANSFER_REMOTE_DATA    = "100008";
     public static final String CMD_FETCH_REMOTE_LOCATION    = "100009";
 
+    public static final String CMD_HEART_TEST = "100010";
 
     public static final String KEY_CMD = "CMD";
     public static final String KEY_LIST = "LIST";
@@ -35,6 +36,8 @@ public class Constant {
     public static final String KEY_LENGTH = "LENGTH";
     public static final String KEY_LONGITUDE = "LONGITUDE";
     public static final String KEY_LATITUDE= "LATITUDE";
+    public static final String KEY_DATA_TYPE = "DATA_TYPE";
+    public static final String KEY_DATA = "DATA";
 
     public static final String TYPE_PHONE = "type_phone";
     public static final String TYPE_SCREEN = "type_screen";
